@@ -708,7 +708,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="header-icon">Rocket</div>
+            <div class="header-icon">🚀</div>
             <div class="header-content">
                 <h1>NASA Publications Analysis</h1>
                 <p>Space Biology Research Intelligence</p>
@@ -717,15 +717,15 @@
 
         <div class="top-actions">
             <button class="process-btn" onclick="exportData()">
-                <span>Download</span>
+                <span>📥</span>
                 Export Data
             </button>
             <button class="process-btn" onclick="showAnalytics()" style="margin-left: 12px;">
-                <span>Chart</span>
+                <span>📊</span>
                 Analytics
             </button>
             <button class="process-btn" onclick="toggleDarkMode()" style="margin-left: 12px; background: rgba(255, 255, 255, 0.2);">
-                <span id="themeIcon">Moon</span>
+                <span id="themeIcon">🌙</span>
                 Theme
             </button>
         </div>
@@ -749,14 +749,18 @@
                     <div class="metric-label">Avg Complexity</div>
                     <div class="metric-value" id="avgComplexity">0</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-label">Systems Studied</div>
+                    <div class="metric-value" id="systemsStudied">0</div>
+                </div>
             </div>
 
             <div class="filters-section">
                 <div class="filter-header">
-                    <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 600;">Target Advanced Filters & Search</h3>
+                    <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 600;">🎯 Advanced Filters & Search</h3>
                 </div>
                 <div class="search-wrapper">
-                    <span class="search-icon">Search</span>
+                    <span class="search-icon">🔍</span>
                     <input 
                         type="text" 
                         class="search-box" 
@@ -764,7 +768,7 @@
                         placeholder="Search publications..."
                         oninput="debouncedFilter()"
                     >
-                    <button class="clear-search" id="clearSearch" onclick="clearSearch()" style="display: none;">X</button>
+                    <button class="clear-search" id="clearSearch" onclick="clearSearch()" style="display: none;">✕</button>
                 </div>
                 <div class="filters-grid">
                     <div class="filter-group">
@@ -774,6 +778,18 @@
                             <option value="high">High Relevance</option>
                             <option value="medium">Medium Relevance</option>
                             <option value="low">Low Relevance</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Biological System</label>
+                        <select class="filter-select" id="systemFilter" onchange="filterPublications()">
+                            <option value="">All Systems</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Research Domain</label>
+                        <select class="filter-select" id="domainFilter" onchange="filterPublications()">
+                            <option value="">All Domains</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -816,7 +832,7 @@
             </div>
 
             <div class="top-stories">
-                <span class="top-stories-icon">Star</span>
+                <span class="top-stories-icon">⭐</span>
                 <span class="top-stories-text">
                     Showing <strong id="resultsCount">0</strong> of <strong id="totalCount">0</strong> publications
                     <span id="filterInfo" style="margin-left: 8px; color: rgba(255,255,255,0.6);"></span>
@@ -834,7 +850,7 @@
                 <div class="footer-content">
                     <div class="footer-text">
                         <span>Developed with</span>
-                        <span class="footer-heart">Heart</span>
+                        <span class="footer-heart">❤️</span>
                         <span>by</span>
                     </div>
                     <div class="footer-developers">
@@ -864,27 +880,27 @@
     <!-- Theme Modal -->
     <div id="themeModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeThemeModal()">X</button>
+            <button class="modal-close" onclick="closeThemeModal()">✕</button>
             <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Choose Theme</h2>
             <p style="opacity: 0.7; font-size: 14px;">Select your preferred color scheme</p>
             <div class="theme-grid">
                 <div class="theme-option theme-dark" onclick="setTheme('dark')">
-                    <div style="font-size: 32px; margin-bottom: 8px;">Moon</div>
+                    <div style="font-size: 32px; margin-bottom: 8px;">🌙</div>
                     <div style="font-weight: 600;">Dark Mode</div>
                     <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Default theme</div>
                 </div>
                 <div class="theme-option theme-light" onclick="setTheme('light')">
-                    <div style="font-size: 32px; margin-bottom: 8px;">Sun</div>
+                    <div style="font-size: 32px; margin-bottom: 8px;">☀️</div>
                     <div style="font-weight: 600;">Light Mode</div>
                     <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Easy on eyes</div>
                 </div>
                 <div class="theme-option theme-contrast" onclick="setTheme('contrast')">
-                    <div style="font-size: 32px; margin-bottom: 8px;">Lightning</div>
+                    <div style="font-size: 32px; margin-bottom: 8px;">⚡</div>
                     <div style="font-weight: 600;">High Contrast</div>
                     <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Maximum visibility</div>
                 </div>
                 <div class="theme-option theme-nasa" onclick="setTheme('nasa')">
-                    <div style="font-size: 32px; margin-bottom: 8px;">Rocket</div>
+                    <div style="font-size: 32px; margin-bottom: 8px;">🚀</div>
                     <div style="font-weight: 600;">NASA Blue</div>
                     <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Official colors</div>
                 </div>
@@ -895,19 +911,19 @@
     <!-- Analytics Modal -->
     <div id="analyticsModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeAnalyticsModal()">X</button>
-            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Chart Analytics Dashboard</h2>
+            <button class="modal-close" onclick="closeAnalyticsModal()">✕</button>
+            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">📊 Analytics Dashboard</h2>
             <p style="opacity: 0.7; font-size: 14px; margin-bottom: 24px;">Comprehensive research insights</p>
             
             <div class="analytics-grid" id="analyticsGrid"></div>
             
             <div class="chart-container">
-                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Line Chart Publications Over Time</h3>
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">📈 Publications Over Time</h3>
                 <div id="analyticsChart" style="color: rgba(255,255,255,0.7); font-size: 14px;"></div>
             </div>
 
             <div class="chart-container" style="margin-top: 20px;">
-                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Microscope Top Research Domains</h3>
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">🔬 Top Research Domains</h3>
                 <div id="domainsChart" style="color: rgba(255,255,255,0.7); font-size: 14px;"></div>
             </div>
         </div>
@@ -992,6 +1008,7 @@
                 document.getElementById('mainContent').style.display = 'block';
 
                 calculateMetrics();
+                populateFilters();
                 filteredPublications = [...allPublications];
                 filterPublications();
 
@@ -1006,9 +1023,11 @@
         function calculateMetrics() {
             const total = allPublications.length;
             const highRel = allPublications.filter(p => p.relevance === 'high').length;
+            const systems = new Set();
             let totalComplexity = 0;
 
             allPublications.forEach(pub => {
+                pub.biological_systems.forEach(s => systems.add(s));
                 totalComplexity += parseFloat(pub.complexity);
             });
 
@@ -1017,20 +1036,57 @@
             document.getElementById('totalPubs').textContent = total;
             document.getElementById('highRelevance').textContent = highRel;
             document.getElementById('avgComplexity').textContent = avgComplexity;
+            document.getElementById('systemsStudied').textContent = systems.size;
+        }
+
+        function populateFilters() {
+            const systems = {};
+            const domains = {};
+            
+            allPublications.forEach(pub => {
+                pub.biological_systems.forEach(s => {
+                    systems[s] = (systems[s] || 0) + 1;
+                });
+                pub.research_domains.forEach(d => {
+                    domains[d] = (domains[d] || 0) + 1;
+                });
+            });
+
+            const systemSelect = document.getElementById('systemFilter');
+            Object.entries(systems).sort((a, b) => b[1] - a[1]).forEach(([system, count]) => {
+                const option = document.createElement('option');
+                option.value = system;
+                option.textContent = `${system.replace(/_/g, ' ')} (${count})`;
+                systemSelect.appendChild(option);
+            });
+
+            const domainSelect = document.getElementById('domainFilter');
+            Object.entries(domains).sort((a, b) => b[1] - a[1]).forEach(([domain, count]) => {
+                const option = document.createElement('option');
+                option.value = domain;
+                option.textContent = `${domain.replace(/_/g, ' ')} (${count})`;
+                domainSelect.appendChild(option);
+            });
         }
 
         window.filterPublications = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const relevanceFilter = document.getElementById('relevanceFilter').value;
+            const systemFilter = document.getElementById('systemFilter').value;
+            const domainFilter = document.getElementById('domainFilter').value;
             const yearFilter = document.getElementById('yearFilter').value;
             const durationFilter = document.getElementById('durationFilter').value;
             const sortFilter = document.getElementById('sortFilter').value;
 
+            // Show clear button if search has text
             document.getElementById('clearSearch').style.display = searchTerm ? 'flex' : 'none';
 
+            // Update active filter badges
             updateFilterBadges({
                 search: searchTerm,
                 relevance: relevanceFilter,
+                system: systemFilter,
+                domain: domainFilter,
                 year: yearFilter,
                 duration: durationFilter
             });
@@ -1041,6 +1097,8 @@
                     if (!text.includes(searchTerm)) return false;
                 }
                 if (relevanceFilter && pub.relevance !== relevanceFilter) return false;
+                if (systemFilter && !pub.biological_systems.includes(systemFilter)) return false;
+                if (domainFilter && !pub.research_domains.includes(domainFilter)) return false;
                 
                 if (yearFilter && pub.publication_year) {
                     const currentYear = new Date().getFullYear();
@@ -1059,6 +1117,7 @@
                 return true;
             });
 
+            // Sort
             if (sortFilter === 'year') {
                 filteredPublications.sort((a, b) => (b.publication_year || 0) - (a.publication_year || 0));
             } else if (sortFilter === 'complexity') {
@@ -1110,7 +1169,7 @@
                                 ${pub.key_findings.length > 0 ? `
                                     <details style="margin-top: 12px; cursor: pointer;">
                                         <summary style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); list-style: none; display: flex; align-items: center; gap: 6px;">
-                                            <span>Microscope</span> View ${pub.key_findings.length} Key Finding${pub.key_findings.length > 1 ? 's' : ''}
+                                            <span>🔬</span> View ${pub.key_findings.length} Key Finding${pub.key_findings.length > 1 ? 's' : ''}
                                         </summary>
                                         <ul style="margin-top: 12px; padding-left: 20px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6;">
                                             ${pub.key_findings.map(f => `<li style="margin-bottom: 6px;">${f}</li>`).join('')}
@@ -1118,8 +1177,8 @@
                                     </details>
                                 ` : ''}
                                 <div class="pub-meta">
-                                    ${pub.publication_year ? `<div class="meta-item">Calendar Year: <strong>${pub.publication_year}</strong></div>` : ''}
-                                    ${pub.experiment_duration_days ? `<div class="meta-item">Clock Duration: <strong>${pub.experiment_duration_days} days</strong></div>` : ''}
+                                    ${pub.publication_year ? `<div class="meta-item">📅 Year: <strong>${pub.publication_year}</strong></div>` : ''}
+                                    ${pub.experiment_duration_days ? `<div class="meta-item">⏱️ Duration: <strong>${pub.experiment_duration_days} days</strong></div>` : ''}
                                     <div class="complexity-badge">Complexity: ${pub.complexity}/10</div>
                                     ${pub.research_domains.slice(0, 2).map(d => 
                                         `<span class="meta-badge">${d.replace(/_/g, ' ')}</span>`
@@ -1153,6 +1212,8 @@
             
             const hasFilters = document.getElementById('searchInput').value || 
                               document.getElementById('relevanceFilter').value ||
+                              document.getElementById('systemFilter').value ||
+                              document.getElementById('domainFilter').value ||
                               document.getElementById('yearFilter').value ||
                               document.getElementById('durationFilter').value;
             
@@ -1163,6 +1224,8 @@
             const badges = [];
             const labels = {
                 relevance: 'Relevance',
+                system: 'System',
+                domain: 'Domain',
                 year: 'Year',
                 duration: 'Duration'
             };
@@ -1193,6 +1256,8 @@
         window.clearAllFilters = function() {
             document.getElementById('searchInput').value = '';
             document.getElementById('relevanceFilter').value = '';
+            document.getElementById('systemFilter').value = '';
+            document.getElementById('domainFilter').value = '';
             document.getElementById('yearFilter').value = '';
             document.getElementById('durationFilter').value = '';
             document.getElementById('sortFilter').value = 'relevance';
@@ -1210,6 +1275,7 @@
         };
 
         function generateAnalytics() {
+            // Calculate analytics
             const total = allPublications.length;
             const avgComplexity = (allPublications.reduce((sum, pub) => sum + parseFloat(pub.complexity), 0) / total).toFixed(1);
             
@@ -1220,40 +1286,60 @@
             const mediumRelevance = allPublications.filter(p => p.relevance === 'medium').length;
             const lowRelevance = allPublications.filter(p => p.relevance === 'low').length;
 
+            const uniqueSystems = new Set();
+            const uniqueDomains = new Set();
+            allPublications.forEach(pub => {
+                pub.biological_systems.forEach(s => uniqueSystems.add(s));
+                pub.research_domains.forEach(d => uniqueDomains.add(d));
+            });
+
             const years = allPublications.filter(p => p.publication_year).map(p => p.publication_year);
             const oldestYear = years.length > 0 ? Math.min(...years) : 0;
             const newestYear = years.length > 0 ? Math.max(...years) : 0;
 
+            // Render analytics cards
             document.getElementById('analyticsGrid').innerHTML = `
                 <div class="analytics-card">
-                    <div class="analytics-label">Total Publications</div>
+                    <div class="analytics-label">📚 Total Publications</div>
                     <div class="analytics-value">${total}</div>
                 </div>
                 <div class="analytics-card">
-                    <div class="analytics-label">High Relevance</div>
+                    <div class="analytics-label">⭐ High Relevance</div>
                     <div class="analytics-value">${highRelevance}</div>
                     <div style="font-size: 12px; opacity: 0.7;">${Math.round(highRelevance/total*100)}% of total</div>
                 </div>
                 <div class="analytics-card">
-                    <div class="analytics-label">Avg Complexity</div>
+                    <div class="analytics-label">🎯 Avg Complexity</div>
                     <div class="analytics-value">${avgComplexity}<span style="font-size: 18px; opacity: 0.7;">/10</span></div>
                 </div>
                 ${durations.length > 0 ? `
                 <div class="analytics-card">
-                    <div class="analytics-label">Avg Duration</div>
+                    <div class="analytics-label">⏱️ Avg Duration</div>
                     <div class="analytics-value">${avgDuration}</div>
                     <div style="font-size: 12px; opacity: 0.7;">days</div>
                 </div>
                 ` : ''}
+                ${uniqueSystems.size > 0 ? `
+                <div class="analytics-card">
+                    <div class="analytics-label">🔬 Biological Systems</div>
+                    <div class="analytics-value">${uniqueSystems.size}</div>
+                </div>
+                ` : ''}
+                ${uniqueDomains.size > 0 ? `
+                <div class="analytics-card">
+                    <div class="analytics-label">🧬 Research Domains</div>
+                    <div class="analytics-value">${uniqueDomains.size}</div>
+                </div>
+                ` : ''}
                 ${years.length > 0 ? `
                 <div class="analytics-card">
-                    <div class="analytics-label">Year Range</div>
+                    <div class="analytics-label">📅 Year Range</div>
                     <div class="analytics-value" style="font-size: 24px;">${oldestYear}-${newestYear}</div>
                     <div style="font-size: 12px; opacity: 0.7;">${newestYear - oldestYear + 1} years</div>
                 </div>
                 ` : ''}
                 <div class="analytics-card">
-                    <div class="analytics-label">Relevance Distribution</div>
+                    <div class="analytics-label">📊 Relevance Distribution</div>
                     <div style="display: flex; gap: 8px; margin-top: 12px; font-size: 13px;">
                         <div style="flex: 1; text-align: center;">
                             <div style="font-weight: 700; color: #10b981;">${highRelevance}</div>
@@ -1271,6 +1357,7 @@
                 </div>
             `;
 
+            // Year distribution chart
             const yearCounts = {};
             allPublications.forEach(pub => {
                 if (pub.publication_year) {
@@ -1295,6 +1382,7 @@
                 document.getElementById('analyticsChart').innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 20px;">No year data available</div>';
             }
 
+            // Domain distribution chart
             const domainCounts = {};
             allPublications.forEach(pub => {
                 pub.research_domains.forEach(d => {
@@ -1333,16 +1421,16 @@
             const body = document.body;
             body.classList.remove('light-mode', 'high-contrast', 'nasa-blue');
             
-            let icon = 'Moon';
+            let icon = '🌙';
             if (theme === 'light') {
                 body.classList.add('light-mode');
-                icon = 'Sun';
+                icon = '☀️';
             } else if (theme === 'contrast') {
                 body.classList.add('high-contrast');
-                icon = 'Lightning';
+                icon = '⚡';
             } else if (theme === 'nasa') {
                 body.classList.add('nasa-blue');
-                icon = 'Rocket';
+                icon = '🚀';
             }
             
             document.getElementById('themeIcon').textContent = icon;
@@ -1397,6 +1485,7 @@
             window.URL.revokeObjectURL(url);
         };
 
+        // Close modals on outside click
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.classList.remove('active');
