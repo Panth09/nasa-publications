@@ -613,7 +613,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Safe JSON parser
+        // ──────────────────────────────────────────────────────────────
+        // SAFE JSON PARSER
+        // ──────────────────────────────────────────────────────────────
         function safeJsonParse(str, fallback = []) {
             if (!str || str === '') return fallback;
             try {
@@ -624,13 +626,17 @@
             }
         }
 
+        // ──────────────────────────────────────────────────────────────
         // State management
+        // ──────────────────────────────────────────────────────────────
         let allPublications = [];
         let filteredPublications = [];
         let currentPage = 1;
         const itemsPerPage = 10;
 
+        // ──────────────────────────────────────────────────────────────
         // Load publications from Firestore
+        // ──────────────────────────────────────────────────────────────
         async function loadPublications() {
             const loading = document.getElementById('loading');
             const results = document.getElementById('results');
@@ -656,17 +662,15 @@
                 loading.style.display = 'none';
                 results.style.display = 'grid';
 
-                populateFilters();
-                updateStats();
-                displayPublications();
-
             } catch (error) {
                 console.error('Error loading publications:', error);
                 loading.innerHTML = `<p style="color: #ef4444;">Error loading publications. Please check console.</p>`;
             }
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Event listeners
+        // ──────────────────────────────────────────────────────────────
         function setupEventListeners() {
             document.getElementById('searchBtn').addEventListener('click', handleSearch);
             document.getElementById('searchInput').addEventListener('keyup', (e) => {
@@ -683,7 +687,9 @@
             document.getElementById('nextBtn').addEventListener('click', () => changePage(1));
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Search
+        // ──────────────────────────────────────────────────────────────
         function handleSearch() {
             const term = document.getElementById('searchInput').value.trim().toLowerCase();
 
@@ -691,10 +697,11 @@
                 filteredPublications = [...allPublications];
             } else {
                 filteredPublications = allPublications.filter(pub => {
+                    const keyFindings = safeJsonParse(pub.key_findings);
                     const text = `
                         ${pub.title || ''}
                         ${pub.abstract || ''}
-                        ${Array.isArray(pub.key_findings) ? pub.key_findings.join(' ') : ''}
+                        ${Array.isArray(keyFindings) ? keyFindings.join(' ') : ''}
                     `.toLowerCase();
                     return text.includes(term);
                 });
@@ -704,7 +711,9 @@
             displayPublications();
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Filters
+        // ──────────────────────────────────────────────────────────────
         function applyFilters() {
             const domain = document.getElementById('domainFilter').value;
             const system = document.getElementById('systemFilter').value;
@@ -734,7 +743,9 @@
             displayPublications();
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Reset filters
+        // ──────────────────────────────────────────────────────────────
         function resetFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('domainFilter').value = '';
@@ -746,7 +757,9 @@
             displayPublications();
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Populate dropdowns
+        // ──────────────────────────────────────────────────────────────
         function populateFilters() {
             const domains = new Set();
             const systems = new Set();
@@ -779,7 +792,9 @@
             });
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Stats
+        // ──────────────────────────────────────────────────────────────
         function updateStats() {
             document.getElementById('totalCount').textContent = allPublications.length;
 
@@ -798,7 +813,9 @@
             document.getElementById('avgDuration').textContent = avg;
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Render page
+        // ──────────────────────────────────────────────────────────────
         function displayPublications() {
             const container = document.getElementById('results');
             const start = (currentPage - 1) * itemsPerPage;
@@ -807,6 +824,7 @@
 
             if (!page.length) {
                 container.innerHTML = '<div class="loading">No publications found matching your criteria.</div>';
+                updatePagination();
                 return;
             }
 
@@ -814,7 +832,9 @@
             updatePagination();
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Card HTML
+        // ──────────────────────────────────────────────────────────────
         function createPublicationCard(pub) {
             const domains = safeJsonParse(pub.research_domains);
             const systems = safeJsonParse(pub.biological_systems);
@@ -856,12 +876,14 @@
             `;
         }
 
+        // ──────────────────────────────────────────────────────────────
         // Pagination
+        // ──────────────────────────────────────────────────────────────
         function updatePagination() {
             const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
-            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
             document.getElementById('prevBtn').disabled = currentPage === 1;
-            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages || totalPages === 0;
         }
 
         function changePage(dir) {
@@ -870,10 +892,15 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Initialize
+        // ──────────────────────────────────────────────────────────────
+        // Init
+        // ──────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async () => {
             await loadPublications();
             setupEventListeners();
+            populateFilters();
+            updateStats();
+            displayPublications();
         });
     </script>
 </body>
