@@ -861,7 +861,7 @@
                                 <div class="developer-role">Full Stack Developer</div>
                             </div>
                         </a>
-                        <a href="https://www.linkedin.com/in/rdvraval19" target="_blank" rel="noopener noreferrer" class="developer-card">
+                        <a href="https://www.linkedin.com/in/raval-dipak-v/" target="_blank" rel="noopener noreferrer" class="developer-card">
                             <div class="linkedin-icon">in</div>
                             <div class="developer-info">
                                 <div class="developer-name">Dipak Raval</div>
@@ -1294,8 +1294,8 @@
             });
 
             const years = allPublications.filter(p => p.publication_year).map(p => p.publication_year);
-            const oldestYear = Math.min(...years);
-            const newestYear = Math.max(...years);
+            const oldestYear = years.length > 0 ? Math.min(...years) : 0;
+            const newestYear = years.length > 0 ? Math.max(...years) : 0;
 
             // Render analytics cards
             document.getElementById('analyticsGrid').innerHTML = `
@@ -1312,24 +1312,32 @@
                     <div class="analytics-label">🎯 Avg Complexity</div>
                     <div class="analytics-value">${avgComplexity}<span style="font-size: 18px; opacity: 0.7;">/10</span></div>
                 </div>
+                ${durations.length > 0 ? `
                 <div class="analytics-card">
                     <div class="analytics-label">⏱️ Avg Duration</div>
                     <div class="analytics-value">${avgDuration}</div>
                     <div style="font-size: 12px; opacity: 0.7;">days</div>
                 </div>
+                ` : ''}
+                ${uniqueSystems.size > 0 ? `
                 <div class="analytics-card">
                     <div class="analytics-label">🔬 Biological Systems</div>
                     <div class="analytics-value">${uniqueSystems.size}</div>
                 </div>
+                ` : ''}
+                ${uniqueDomains.size > 0 ? `
                 <div class="analytics-card">
                     <div class="analytics-label">🧬 Research Domains</div>
                     <div class="analytics-value">${uniqueDomains.size}</div>
                 </div>
+                ` : ''}
+                ${years.length > 0 ? `
                 <div class="analytics-card">
                     <div class="analytics-label">📅 Year Range</div>
                     <div class="analytics-value" style="font-size: 24px;">${oldestYear}-${newestYear}</div>
                     <div style="font-size: 12px; opacity: 0.7;">${newestYear - oldestYear + 1} years</div>
                 </div>
+                ` : ''}
                 <div class="analytics-card">
                     <div class="analytics-label">📊 Relevance Distribution</div>
                     <div style="display: flex; gap: 8px; margin-top: 12px; font-size: 13px;">
@@ -1356,18 +1364,23 @@
                     yearCounts[pub.publication_year] = (yearCounts[pub.publication_year] || 0) + 1;
                 }
             });
-            const yearData = Object.entries(yearCounts).sort((a, b) => a[0] - b[0]);
-            const maxYearCount = Math.max(...Object.values(yearCounts));
             
-            document.getElementById('analyticsChart').innerHTML = yearData.map(([year, count]) => `
-                <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
-                    <div style="width: 60px; font-weight: 600;">${year}</div>
-                    <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
-                        <div style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); height: 100%; width: ${(count/maxYearCount)*100}%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 12px; font-weight: 600;"></div>
+            if (Object.keys(yearCounts).length > 0) {
+                const yearData = Object.entries(yearCounts).sort((a, b) => a[0] - b[0]);
+                const maxYearCount = Math.max(...Object.values(yearCounts));
+                
+                document.getElementById('analyticsChart').innerHTML = yearData.map(([year, count]) => `
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
+                        <div style="width: 60px; font-weight: 600;">${year}</div>
+                        <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); height: 100%; width: ${(count/maxYearCount)*100}%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 12px; font-weight: 600;"></div>
+                        </div>
+                        <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
                     </div>
-                    <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                document.getElementById('analyticsChart').innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 20px;">No year data available</div>';
+            }
 
             // Domain distribution chart
             const domainCounts = {};
@@ -1376,18 +1389,23 @@
                     domainCounts[d] = (domainCounts[d] || 0) + 1;
                 });
             });
-            const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const maxDomainCount = topDomains[0][1];
+            
+            if (Object.keys(domainCounts).length > 0) {
+                const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                const maxDomainCount = topDomains[0][1];
 
-            document.getElementById('domainsChart').innerHTML = topDomains.map(([domain, count]) => `
-                <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
-                    <div style="width: 180px; font-weight: 600; font-size: 13px;">${domain.replace(/_/g, ' ')}</div>
-                    <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
-                        <div style="background: linear-gradient(90deg, #10b981, #059669); height: 100%; width: ${(count/maxDomainCount)*100}%; border-radius: 4px;"></div>
+                document.getElementById('domainsChart').innerHTML = topDomains.map(([domain, count]) => `
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
+                        <div style="width: 180px; font-weight: 600; font-size: 13px;">${domain.replace(/_/g, ' ')}</div>
+                        <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #10b981, #059669); height: 100%; width: ${(count/maxDomainCount)*100}%; border-radius: 4px;"></div>
+                        </div>
+                        <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
                     </div>
-                    <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                document.getElementById('domainsChart').innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 20px;">No domain data available</div>';
+            }
         }
 
         window.toggleDarkMode = function() {
