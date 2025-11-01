@@ -30,13 +30,3 @@ A dynamic, front-end dashboard to analyze and explore NASA's space biology resea
 * **APIs:** Firebase Web SDK
 
 ---
-
-## 🛠️ Setup and Installation (for Local Development)
-
-While the project is live, you can also run it locally by connecting it to your own Firebase instance.
-
-### Step 1: Clone the Repository
-
-```bash
-git clone [https://github.com/](https://github.com/)[YOUR_USERNAME]/[YOUR_REPO_NAME].git
-cd [YOUR_REPO_NAME]
