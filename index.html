@@ -603,10 +603,31 @@
                 loading.style.display = 'none';
                 results.style.display = 'grid';
 
-                // Update stats immediately after loading
-                document.getElementById('totalCount').textContent = allPublications.length;
-                document.getElementById('domainCount').textContent = Math.floor(Math.random() * 11) + 5;
-                document.getElementById('avgDuration').textContent = Math.floor(Math.random() * 151) + 30;
+                // Calculate real stats from data
+                const totalPubs = allPublications.length;
+                
+                // Count unique research domains
+                const domainSet = new Set();
+                allPublications.forEach(pub => {
+                    const domains = safeJsonParse(pub.research_domains);
+                    domains.forEach(d => {
+                        if (d) domainSet.add(d);
+                    });
+                });
+                
+                // Calculate average experiment duration
+                const durations = allPublications
+                    .map(p => p.experiment_duration_days)
+                    .filter(d => d && !isNaN(d));
+                const avgDays = durations.length 
+                    ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+                    : 0;
+                
+                document.getElementById('totalCount').textContent = totalPubs;
+                document.getElementById('domainCount').textContent = domainSet.size;
+                document.getElementById('avgDuration').textContent = avgDays;
+
+                console.log('Stats:', { totalPubs, domains: domainSet.size, avgDays });
 
                 displayPublications();
 
