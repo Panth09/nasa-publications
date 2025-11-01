@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV to Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #progress {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+        }
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .info {
+            color: #3498db;
+        }
+        .config-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .config-section h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .config-section code {
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: #d63384;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Upload NASA Publications to Firebase</h1>
+        <p class="subtitle">One-time upload tool for CSV data</p>
+
+        <div class="config-section">
+            <h3>⚠️ Before You Start</h3>
+            <p>Make sure you've:</p>
+            <ol>
+                <li>Created a Firebase project</li>
+                <li>Enabled Firestore Database</li>
+                <li>Updated the Firebase config in the script below</li>
+                <li>Set Firestore rules to allow write temporarily</li>
+            </ol>
+            <p><strong>Temporary Firestore Rules (for upload only):</strong></p>
+            <code>allow read, write: if true;</code>
+        </div>
+
+        <input type="file" id="csvFile" accept=".csv" />
+        <button id="uploadBtn" onclick="uploadData()">Upload to Firebase</button>
+
+        <div id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <p id="progressText">Preparing...</p>
+        </div>
+
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, writeBatch, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // ⚠️ REPLACE WITH YOUR FIREBASE CONFIG
+       const firebaseConfig = {
+        apiKey: "AIzaSyDbxPfySgHZq0kE_FbewTnIWioJPxwTqks",
+        authDomain: "nasa-bio-engine.firebaseapp.com",
+        projectId: "nasa-bio-engine",
+        storageBucket: "nasa-bio-engine.firebasestorage.app",
+        messagingSenderId: "463317555755",
+        appId: "1:463317555755:web:d8f27286a31be14ea0686e",
+        measurementId: "G-QN49G284KM"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+
+        // CSV Parser
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const values = [];
+                let currentValue = '';
+                let insideQuotes = false;
+
+                for (let j = 0; j < lines[i].length; j++) {
+                    const char = lines[i][j];
+                    
+                    if (char === '"') {
+                        insideQuotes = !insideQuotes;
+                    } else if (char === ',' && !insideQuotes) {
+                        values.push(currentValue.trim());
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                values.push(currentValue.trim());
+
+                if (values.length === headers.length) {
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index];
+                    });
+                    data.push(obj);
+                }
+            }
+
+            return data;
+        }
+
+        // Log function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            logDiv.style.display = 'block';
+            const logItem = document.createElement('div');
+            logItem.className = `log-item ${type}`;
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(logItem);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Upload function
+        window.uploadData = async function() {
+            const fileInput = document.getElementById('csvFile');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a CSV file first!');
+                return;
+            }
+
+            try {
+                uploadBtn.disabled = true;
+                progressDiv.style.display = 'block';
+                log('Starting upload process...', 'info');
+
+                // Read file
+                const file = fileInput.files[0];
+                const text = await file.text();
+                log('CSV file read successfully', 'success');
+
+                // Parse CSV
+                const data = parseCSV(text);
+                log(`Parsed ${data.length} rows from CSV`, 'success');
+
+                // Upload in batches
+                const batchSize = 500; // Firestore batch limit
+                let uploaded = 0;
+
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const batch = writeBatch(db);
+                    const batchData = data.slice(i, Math.min(i + batchSize, data.length));
+
+                    batchData.forEach((row) => {
+                        const docRef = doc(collection(db, 'publications'));
+                        
+                        // Clean and prepare data
+                        const cleanData = {
+                            id: row.id || '',
+                            pmcid: row.pmcid || '',
+                            title: row.title || '',
+                            link: row.link || '',
+                            abstract: row.abstract || '',
+                            content_sample: row.content_sample || '',
+                            ai_response: row.ai_response || '',
+                            ai_role: row.ai_role || '',
+                            ai_model: row.ai_model || '',
+                            ai_confidence: row.ai_confidence || '',
+                            key_findings: row.key_findings || '[]',
+                            findings_count: parseInt(row.findings_count) || 0,
+                            research_roles: row.research_roles || '[]',
+                            research_domains: row.research_domains || '[]',
+                            mission_relevance: row.mission_relevance || '',
+                            relevance_score: parseInt(row.relevance_score) || 0,
+                            space_complexity: parseInt(row.space_complexity) || 0,
+                            space_factors: row.space_factors || '{}',
+                            biological_systems: row.biological_systems || '[]',
+                            finish_reason: row.finish_reason || '',
+                            usage_stats: row.usage_stats || '{}',
+                            processed: row.processed === 'true',
+                            processed_at: row.processed_at || '',
+                            created_at: row.created_at || new Date().toISOString(),
+                            updated_at: row.updated_at || new Date().toISOString(),
+                            citations_count: parseInt(row.citations_count) || 0,
+                            publication_year: row.publication_year ? parseInt(row.publication_year) : null,
+                            experiment_duration_days: row.experiment_duration_days ? parseInt(row.experiment_duration_days) : null
+                        };
+
+                        batch.set(docRef, cleanData);
+                    });
+
+                    await batch.commit();
+                    uploaded += batchData.length;
+
+                    const percentage = Math.round((uploaded / data.length) * 100);
+                    progressFill.style.width = percentage + '%';
+                    progressFill.textContent = percentage + '%';
+                    progressText.textContent = `Uploaded ${uploaded} / ${data.length} documents`;
+                    
+                    log(`Batch ${Math.ceil(i / batchSize) + 1} uploaded (${uploaded} / ${data.length})`, 'success');
+                }
+
+                log('✅ Upload complete! All data uploaded successfully.', 'success');
+                progressText.textContent = `✅ Complete! ${uploaded} documents uploaded`;
+                alert('Upload successful! You can now close this page and secure your Firestore rules.');
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                alert('Upload failed! Check the log for details.');
+                console.error('Upload error:', error);
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
