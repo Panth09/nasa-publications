@@ -618,6 +618,7 @@
 
                 calculateMetrics();
                 populateFilters();
+                filteredPublications = [...allPublications];
                 filterPublications();
 
             } catch (error) {
@@ -758,6 +759,7 @@
             if (toShow.length === 0) {
                 container.innerHTML = '<div class="no-results">No publications found matching your criteria.</div>';
                 document.getElementById('loadMoreContainer').style.display = 'none';
+                updateResultsCount();
                 return;
             }
 
@@ -804,6 +806,8 @@
 
             document.getElementById('loadMoreContainer').style.display = 
                 displayedCount >= filteredPublications.length ? 'none' : 'block';
+            
+            updateResultsCount();
         }
 
         window.loadMore = function() {
