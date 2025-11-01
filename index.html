@@ -594,43 +594,24 @@
         </div>
     </footer>
 
+    <!-- Firebase SDK -->
     <script type="module">
-        // Mock database for demonstration
-        const mockPublications = [
-            {
-                id: '1',
-                title: 'Effects of Microgravity on Cellular Metabolism',
-                abstract: 'This study investigates the profound impacts of microgravity conditions on cellular metabolic pathways in human tissue samples. Our findings reveal significant alterations in mitochondrial function and ATP production rates.',
-                research_domains: '["Space Biology", "Cell Biology"]',
-                biological_systems: '["Cellular", "Metabolic"]',
-                key_findings: '["Reduced ATP synthesis in microgravity", "Altered mitochondrial morphology", "Changed expression of metabolic genes"]',
-                publication_year: 2023,
-                experiment_duration_days: 90,
-                link: '#'
-            },
-            {
-                id: '2',
-                title: 'Bone Density Loss During Extended Space Missions',
-                abstract: 'Comprehensive analysis of bone density changes in astronauts during long-duration spaceflight. The research demonstrates accelerated bone loss compared to terrestrial aging processes.',
-                research_domains: '["Space Medicine", "Physiology"]',
-                biological_systems: '["Skeletal", "Endocrine"]',
-                key_findings: '["1-2% bone density loss per month", "Increased calcium excretion", "Osteoclast activity elevation"]',
-                publication_year: 2022,
-                experiment_duration_days: 180,
-                link: '#'
-            },
-            {
-                id: '3',
-                title: 'Plant Growth Optimization in Controlled Space Environments',
-                abstract: 'Investigation of optimal growing conditions for crops in space habitats. This research focuses on lighting, nutrient delivery, and atmospheric composition for maximum yield.',
-                research_domains: '["Plant Science", "Environmental Science"]',
-                biological_systems: '["Plant", "Photosynthetic"]',
-                key_findings: '["LED spectrum optimization increases yield by 40%", "Aeroponic systems most efficient", "CO2 enrichment beneficial"]',
-                publication_year: 2023,
-                experiment_duration_days: 120,
-                link: '#'
-            }
-        ];
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbxPfySgHZq0kE_FbewTnIWioJPxwTqks",
+            authDomain: "nasa-bio-engine.firebaseapp.com",
+            projectId: "nasa-bio-engine",
+            storageBucket: "nasa-bio-engine.firebasestorage.app",
+            messagingSenderId: "463317555755",
+            appId: "1:463317555755:web:d8f27286a31be14ea0686e",
+            measurementId: "G-QN49G284KM"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         // Safe JSON parser
         function safeJsonParse(str, fallback = []) {
@@ -638,24 +619,54 @@
             try {
                 return JSON.parse(str);
             } catch (e) {
+                console.warn('Invalid JSON – using fallback:', str);
                 return fallback;
             }
         }
 
-        let allPublications = mockPublications;
-        let filteredPublications = [...allPublications];
+        // State management
+        let allPublications = [];
+        let filteredPublications = [];
         let currentPage = 1;
         const itemsPerPage = 10;
 
-        function init() {
-            setupEventListeners();
-            populateFilters();
-            updateStats();
-            displayPublications();
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('results').style.display = 'grid';
+        // Load publications from Firestore
+        async function loadPublications() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+
+            try {
+                loading.style.display = 'block';
+                results.style.display = 'none';
+
+                const publicationsRef = collection(db, 'publications');
+                const q = query(publicationsRef, orderBy('created_at', 'desc'));
+                const querySnapshot = await getDocs(q);
+
+                allPublications = [];
+                querySnapshot.forEach((doc) => {
+                    allPublications.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                filteredPublications = [...allPublications];
+
+                loading.style.display = 'none';
+                results.style.display = 'grid';
+
+                populateFilters();
+                updateStats();
+                displayPublications();
+
+            } catch (error) {
+                console.error('Error loading publications:', error);
+                loading.innerHTML = `<p style="color: #ef4444;">Error loading publications. Please check console.</p>`;
+            }
         }
 
+        // Event listeners
         function setupEventListeners() {
             document.getElementById('searchBtn').addEventListener('click', handleSearch);
             document.getElementById('searchInput').addEventListener('keyup', (e) => {
@@ -665,12 +676,14 @@
             document.getElementById('domainFilter').addEventListener('change', applyFilters);
             document.getElementById('systemFilter').addEventListener('change', applyFilters);
             document.getElementById('yearFilter').addEventListener('change', applyFilters);
+
             document.getElementById('resetFilters').addEventListener('click', resetFilters);
 
             document.getElementById('prevBtn').addEventListener('click', () => changePage(-1));
             document.getElementById('nextBtn').addEventListener('click', () => changePage(1));
         }
 
+        // Search
         function handleSearch() {
             const term = document.getElementById('searchInput').value.trim().toLowerCase();
 
@@ -691,6 +704,7 @@
             displayPublications();
         }
 
+        // Filters
         function applyFilters() {
             const domain = document.getElementById('domainFilter').value;
             const system = document.getElementById('systemFilter').value;
@@ -720,6 +734,7 @@
             displayPublications();
         }
 
+        // Reset filters
         function resetFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('domainFilter').value = '';
@@ -731,6 +746,7 @@
             displayPublications();
         }
 
+        // Populate dropdowns
         function populateFilters() {
             const domains = new Set();
             const systems = new Set();
@@ -763,6 +779,7 @@
             });
         }
 
+        // Stats
         function updateStats() {
             document.getElementById('totalCount').textContent = allPublications.length;
 
@@ -781,6 +798,7 @@
             document.getElementById('avgDuration').textContent = avg;
         }
 
+        // Render page
         function displayPublications() {
             const container = document.getElementById('results');
             const start = (currentPage - 1) * itemsPerPage;
@@ -796,6 +814,7 @@
             updatePagination();
         }
 
+        // Card HTML
         function createPublicationCard(pub) {
             const domains = safeJsonParse(pub.research_domains);
             const systems = safeJsonParse(pub.biological_systems);
@@ -837,6 +856,7 @@
             `;
         }
 
+        // Pagination
         function updatePagination() {
             const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
             document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
@@ -850,8 +870,11 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Initialize on load
-        init();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadPublications();
+            setupEventListeners();
+        });
     </script>
 </body>
 </html>
