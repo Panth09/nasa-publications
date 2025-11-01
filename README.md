@@ -8,9 +8,6 @@ A dynamic, front-end dashboard to analyze and explore NASA's space biology resea
 
 ### 🚀 [**View the Live Demo**](https://nasa-publications.vercel.app) &rarr;
 
-![Project Screenshot]([ADD_YOUR_SCREENSHOT_URL_HERE])
-
-*A screenshot of the main dashboard interface.*
 
 ---
 
