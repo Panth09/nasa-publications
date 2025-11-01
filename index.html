@@ -3,345 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Bioscience Research Explorer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <title>NASA Publications Analysis</title>
     <style>
-        :root {
-            --primary-blue: #3B82F6;
-            --accent-purple: #A855F7;
-            --highlight-green: #10B981;
-            --warning-orange: #F59E0B;
-            --bg-dark: #0f172a;
-            --card-bg: rgba(31, 41, 55, 0.6);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e3a8a 50%, var(--bg-dark) 100%);
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            backdrop-filter: blur(8px);
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        .stat-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
         }
-        #network-graph {
-            width: 100%;
-            height: 700px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            overflow: hidden;
+
+        .header-icon {
+            font-size: 48px;
         }
-        .publication-card {
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
+
+        .header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
-        .publication-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
-            border-color: var(--primary-blue);
+
+        .header-content p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
         }
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
         }
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+
+        .process-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: #1f2937;
-            border-radius: 3px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: var(--primary-blue);
-            border-radius: 3px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+
+        .process-btn:hover {
             background: #2563eb;
+            transform: translateY(-1px);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
-        .animate-fade-in { animation: fadeIn 0.8s ease-out; }
-        .animate-slide-up { animation: fadeIn 1s ease-out; }
-        .chart-wrapper { height: 22rem; position: relative; }
-        .focus\:ring {
-            --tw-ring-color: var(--primary-blue);
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
         }
-        .sr-only {
+
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .filters-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .search-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 14px 20px;
+            padding-left: 45px;
+            color: white;
+            font-size: 15px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-icon {
             position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
         }
-        .loading-spinner {
-            border: 4px solid rgba(59, 130, 246, 0.3);
-            border-top: 4px solid #3B82F6;
+
+        .search-box:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #3b82f6;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #3b82f6;
+        }
+
+        .filter-select option {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .publications-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .publication-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .publication-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .pub-header {
+            display: flex;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .pub-id {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pub-content {
+            flex: 1;
+        }
+
+        .pub-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .pub-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .pub-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .meta-badge {
+            background: rgba(147, 51, 234, 0.2);
+            color: #e9d5ff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .meta-badge.immune {
+            background: rgba(236, 72, 153, 0.2);
+            color: #fce7f3;
+        }
+
+        .meta-badge.high {
+            background: rgba(251, 146, 60, 0.2);
+            color: #fed7aa;
+        }
+
+        .complexity-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #3b82f6;
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 20px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .load-more {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .load-more-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .load-more-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .top-stories {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-stories-icon {
+            font-size: 24px;
+        }
+
+        .top-stories-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content h1 {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
-<body class="text-white min-h-screen">
-    <div class="container mx-auto px-4 py-12 max-w-7xl">
-        <!-- Header -->
-        <header class="text-center mb-12 animate-fade-in">
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-xl">
-                🚀 NASA Bioscience Research Explorer
-            </h1>
-            <p class="text-gray-200 text-xl md:text-2xl mb-2">Advanced Dashboard for Space Biology Insights</p>
-            <p class="text-gray-400 text-base" id="headerStats">Loading data...</p>
-        </header>
-
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-20">
-            <div class="loading-spinner"></div>
-            <p class="text-gray-400 mt-4 text-xl">Loading publications from database...</p>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🚀</div>
+            <div class="header-content">
+                <h1>NASA Publications Analysis</h1>
+                <p>Space Biology Research Intelligence</p>
+            </div>
         </div>
 
-        <!-- Main Content (hidden until loaded) -->
+        <div class="top-actions">
+            <button class="process-btn">
+                <span>🔄</span>
+                Process New Data
+            </button>
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <div>Loading publications...</div>
+        </div>
+
         <div id="mainContent" style="display: none;">
-            <!-- Navigation Tabs -->
-            <nav class="flex flex-wrap justify-center gap-4 mb-12" role="tablist">
-                <button onclick="showTab('overview', event)" class="tab-btn px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 ring-offset-2 ring-blue-500" role="tab" aria-selected="true" aria-controls="overview">
-                    📊 Overview
-                </button>
-                <button onclick="showTab('search', event)" class="tab-btn px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 ring-offset-2 ring-blue-500" role="tab" aria-selected="false" aria-controls="search">
-                    🔍 Search & Explore
-                </button>
-                <button onclick="showTab('insights', event)" class="tab-btn px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 ring-offset-2 ring-blue-500" role="tab" aria-selected="false" aria-controls="insights">
-                    💡 AI Insights
-                </button>
-                <button onclick="showTab('knowledge-graph', event)" class="tab-btn px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 ring-offset-2 ring-blue-500" role="tab" aria-selected="false" aria-controls="knowledge-graph">
-                    🕸️ Knowledge Graph
-                </button>
-            </nav>
-
-            <!-- TAB 1: OVERVIEW -->
-            <section id="overview" class="tab-content active" role="tabpanel">
-                <!-- Key Metrics -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <div class="stat-card bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl p-6 shadow-2xl border border-blue-700/50 animate-slide-up animation-delay-100">
-                        <h3 class="text-blue-300 text-sm font-medium mb-2">📚 Total Publications</h3>
-                        <p class="text-5xl font-bold text-white" id="totalPubs">0</p>
-                    </div>
-                    <div class="stat-card bg-gradient-to-br from-green-900 to-green-800 rounded-xl p-6 shadow-2xl border border-green-700/50 animate-slide-up animation-delay-200">
-                        <h3 class="text-green-300 text-sm font-medium mb-2">🧬 Research Domains</h3>
-                        <p class="text-5xl font-bold text-white" id="domainCount">0</p>
-                    </div>
-                    <div class="stat-card bg-gradient-to-br from-purple-900 to-purple-800 rounded-xl p-6 shadow-2xl border border-purple-700/50 animate-slide-up animation-delay-300">
-                        <h3 class="text-purple-300 text-sm font-medium mb-2">🔬 Biological Systems</h3>
-                        <p class="text-5xl font-bold text-white" id="systemCount">0</p>
-                    </div>
-                    <div class="stat-card bg-gradient-to-br from-orange-900 to-orange-800 rounded-xl p-6 shadow-2xl border border-orange-700/50 animate-slide-up animation-delay-400">
-                        <h3 class="text-orange-300 text-sm font-medium mb-2">📅 Avg Duration</h3>
-                        <p class="text-5xl font-bold text-white" id="avgDuration">0</p>
-                        <p class="text-orange-300 text-xs mt-1">days</p>
-                    </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Publications</div>
+                    <div class="metric-value" id="totalPubs">0</div>
                 </div>
-
-                <!-- Charts Row 1 -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-500">
-                        <h3 class="text-2xl font-bold mb-6 text-blue-400">📈 Publications Timeline</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="yearChart" aria-label="Timeline of publications by year"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-600">
-                        <h3 class="text-2xl font-bold mb-6 text-green-400">🧬 Top Research Domains</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="domainChart" aria-label="Distribution of research domains"></canvas>
-                        </div>
-                    </div>
+                <div class="metric-card">
+                    <div class="metric-label">High Relevance</div>
+                    <div class="metric-value" id="highRelevance">0</div>
                 </div>
-
-                <!-- Charts Row 2 -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-700">
-                        <h3 class="text-2xl font-bold mb-6 text-purple-400">🔬 Biological Systems</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="systemChart" aria-label="Distribution of biological systems"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-800">
-                        <h3 class="text-2xl font-bold mb-6 text-orange-400">⏱️ Experiment Duration Distribution</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="durationChart" aria-label="Distribution of experiment durations"></canvas>
-                        </div>
-                    </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Complexity</div>
+                    <div class="metric-value" id="avgComplexity">0</div>
                 </div>
-            </section>
+                <div class="metric-card">
+                    <div class="metric-label">Systems Studied</div>
+                    <div class="metric-value" id="systemsStudied">0</div>
+                </div>
+            </div>
 
-            <!-- TAB 2: SEARCH & EXPLORE -->
-            <section id="search" class="tab-content" role="tabpanel">
-                <!-- Search Bar -->
-                <div class="mb-8">
-                    <label for="searchInput" class="sr-only">Search publications</label>
+            <div class="filters-section">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
                     <input 
                         type="text" 
-                        id="searchInput" 
-                        placeholder="🔍 Search by title, abstract, research domain, biological system..." 
-                        class="w-full px-6 py-4 bg-gray-800/60 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all duration-300 backdrop-blur-sm shadow-lg"
-                        oninput="debouncedFilterPublications()"
-                        aria-describedby="search-hint"
+                        class="search-box" 
+                        id="searchInput"
+                        placeholder="Search publications..."
+                        oninput="debouncedFilter()"
                     >
-                    <p id="search-hint" class="text-gray-400 text-sm mt-2">Enter keywords to filter publications by title, abstract, or categories.</p>
                 </div>
-
-                <!-- Filters -->
-                <div class="bg-gray-800/60 rounded-xl p-6 mb-8 border border-gray-700 backdrop-blur-sm shadow-lg animate-slide-up">
-                    <h3 class="text-xl font-bold mb-4 text-white">🎯 Filters</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="domainFilter" class="block text-gray-400 text-sm mb-2">Research Domain</label>
-                            <select id="domainFilter" onchange="filterPublications()" class="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white backdrop-blur-sm focus:outline-none focus:ring-2 ring-blue-500">
-                                <option value="">All Domains</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="systemFilter" class="block text-gray-400 text-sm mb-2">Biological System</label>
-                            <select id="systemFilter" onchange="filterPublications()" class="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white backdrop-blur-sm focus:outline-none focus:ring-2 ring-blue-500">
-                                <option value="">All Systems</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="yearFilter" class="block text-gray-400 text-sm mb-2">Year Range</label>
-                            <select id="yearFilter" onchange="filterPublications()" class="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white backdrop-blur-sm focus:outline-none focus:ring-2 ring-blue-500">
-                                <option value="">All Years</option>
-                                <option value="recent">Last 5 Years</option>
-                                <option value="2015-2020">2015-2020</option>
-                                <option value="2010-2015">2010-2015</option>
-                                <option value="before-2010">Before 2010</option>
-                            </select>
-                        </div>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>All Relevance</label>
+                        <select class="filter-select" id="relevanceFilter" onchange="filterPublications()">
+                            <option value="">All Relevance</option>
+                            <option value="high">High Relevance</option>
+                            <option value="medium">Medium Relevance</option>
+                            <option value="low">Low Relevance</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>All Systems</label>
+                        <select class="filter-select" id="systemFilter" onchange="filterPublications()">
+                            <option value="">All Systems</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Sort by Relevance</label>
+                        <select class="filter-select" id="sortFilter" onchange="filterPublications()">
+                            <option value="relevance">Sort by Relevance</option>
+                            <option value="year">Sort by Year</option>
+                            <option value="complexity">Sort by Complexity</option>
+                            <option value="duration">Sort by Duration</option>
+                        </select>
                     </div>
                 </div>
+            </div>
 
-                <!-- Results -->
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-white">Publications</h2>
-                    <p class="text-gray-400 mt-1" id="resultCount">0 publications</p>
-                </div>
-                
-                <div id="publicationsList" class="space-y-6 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" role="list"></div>
+            <div class="top-stories">
+                <span class="top-stories-icon">⭐</span>
+                <span class="top-stories-text">Top Stories: Highlighting cutting-edge research...</span>
+            </div>
 
-                <!-- Load More Button -->
-                <div class="text-center mt-8">
-                    <button onclick="loadMore()" id="loadMoreBtn" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 ring-offset-2 ring-blue-500">
-                        Load More Publications
-                    </button>
-                </div>
-            </section>
+            <div class="publications-list" id="publicationsList"></div>
 
-            <!-- TAB 3: AI INSIGHTS -->
-            <section id="insights" class="tab-content" role="tabpanel">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <!-- Top Research Areas -->
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up">
-                        <h3 class="text-2xl font-bold mb-4 text-green-400">✅ Top Research Areas</h3>
-                        <p class="text-gray-400 mb-4">Most published research domains</p>
-                        <div class="space-y-3 max-h-80 overflow-y-auto scrollbar-thin" id="topAreas"></div>
-                    </div>
-
-                    <!-- Emerging Systems -->
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-100">
-                        <h3 class="text-2xl font-bold mb-4 text-purple-400">🔬 Biological Systems Coverage</h3>
-                        <p class="text-gray-400 mb-4">Distribution across systems</p>
-                        <div class="space-y-3 max-h-80 overflow-y-auto scrollbar-thin" id="systemsBreakdown"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    <!-- Publication Trends -->
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-200">
-                        <h3 class="text-2xl font-bold mb-4 text-blue-400">📈 Publication Trends</h3>
-                        <p class="text-gray-400 mb-4">Year-over-year growth</p>
-                        <div class="space-y-3" id="trendAnalysis"></div>
-                    </div>
-
-                    <!-- Duration Insights -->
-                    <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-300">
-                        <h3 class="text-2xl font-bold mb-4 text-orange-400">⏱️ Experiment Duration Insights</h3>
-                        <div class="space-y-4" id="durationInsights"></div>
-                    </div>
-                </div>
-
-                <!-- Research Summary -->
-                <section class="bg-gradient-to-r from-blue-900/80 to-purple-900/80 rounded-xl p-8 shadow-2xl border border-blue-700/50 backdrop-blur-sm animate-slide-up animation-delay-400">
-                    <h3 class="text-3xl font-bold mb-6 text-white text-center">🎯 Research Highlights</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="researchHighlights"></div>
-                </section>
-            </section>
-
-            <!-- TAB 4: KNOWLEDGE GRAPH -->
-            <section id="knowledge-graph" class="tab-content" role="tabpanel">
-                <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 mb-6 backdrop-blur-sm animate-slide-up">
-                    <h3 class="text-2xl font-bold mb-4 text-purple-400">🕸️ Research Relationship Network</h3>
-                    <p class="text-gray-400 mb-2">Interactive connections between research domains and biological systems.</p>
-                    <p class="text-gray-500 text-sm">Drag nodes to explore • Hover for details • Node size represents publication count</p>
-                </div>
-
-                <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 mb-6 backdrop-blur-sm animate-slide-up animation-delay-100">
-                    <div id="network-graph" role="img" aria-label="Interactive network graph of research connections"></div>
-                </div>
-
-                <!-- Legend -->
-                <div class="bg-gray-800/60 rounded-xl p-6 shadow-2xl border border-gray-700/50 backdrop-blur-sm animate-slide-up animation-delay-200">
-                    <h4 class="font-bold mb-3 text-white">Legend</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-5 h-5 rounded-full bg-blue-500"></div>
-                            <span class="text-gray-300">Research Domains</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-5 h-5 rounded-full bg-purple-500"></div>
-                            <span class="text-gray-300">Biological Systems</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-0.5 bg-gray-400"></div>
-                            <span class="text-gray-300">Connections</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <div class="load-more" id="loadMoreContainer">
+                <button class="load-more-btn" onclick="loadMore()">Load More Publications</button>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDbxPfySgHZq0kE_FbewTnIWioJPxwTqks",
             authDomain: "nasa-bio-engine.firebaseapp.com",
@@ -355,25 +484,39 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Safe JSON parser
+        let allPublications = [];
+        let filteredPublications = [];
+        let displayedCount = 10;
+        let debounceTimer;
+
         function safeJsonParse(str, fallback = []) {
             if (!str || str === '') return fallback;
             try {
                 return JSON.parse(str);
             } catch (e) {
-                console.warn('Invalid JSON – using fallback:', str);
                 return fallback;
             }
         }
 
-        // Global state
-        let allPublications = [];
-        let displayedCount = 10;
-        let graphInitialized = false;
-        let timeoutId;
-        let chartInstances = {};
+        function calculateComplexity(pub) {
+            let score = 0;
+            score += pub.research_domains.length * 0.3;
+            score += pub.biological_systems.length * 0.3;
+            score += pub.key_findings.length * 0.2;
+            if (pub.experiment_duration_days > 90) score += 0.5;
+            if (pub.abstract.length > 500) score += 0.3;
+            return Math.min(10, score).toFixed(1);
+        }
 
-        // Load publications from Firestore
+        function getRelevance(pub) {
+            const keyTerms = ['spaceflight', 'microgravity', 'radiation', 'ISS', 'astronaut', 'space'];
+            const text = (pub.title + ' ' + pub.abstract).toLowerCase();
+            const matches = keyTerms.filter(term => text.includes(term)).length;
+            if (matches >= 3) return 'high';
+            if (matches >= 1) return 'medium';
+            return 'low';
+        }
+
         async function loadPublications() {
             try {
                 const publicationsRef = collection(db, 'publications');
@@ -383,93 +526,64 @@
                 allPublications = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    allPublications.push({
+                    const pub = {
                         id: doc.id,
                         title: data.title || 'Untitled',
-                        abstract: data.abstract || '',
+                        abstract: data.abstract || 'No abstract available.',
                         link: data.link || '#',
                         publication_year: data.publication_year || null,
                         experiment_duration_days: data.experiment_duration_days || null,
                         research_domains: safeJsonParse(data.research_domains),
                         biological_systems: safeJsonParse(data.biological_systems),
                         key_findings: safeJsonParse(data.key_findings)
-                    });
+                    };
+                    pub.complexity = calculateComplexity(pub);
+                    pub.relevance = getRelevance(pub);
+                    allPublications.push(pub);
                 });
 
-                // Hide loading, show content
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
 
-                // Calculate and display statistics
-                calculateStatistics();
+                calculateMetrics();
                 populateFilters();
                 filterPublications();
-                initCharts();
-                populateInsights();
 
             } catch (error) {
                 console.error('Error loading publications:', error);
                 document.getElementById('loadingState').innerHTML = `
-                    <p class="text-red-400 text-xl">Error loading publications.</p>
-                    <p class="text-gray-400 mt-2">Please check console for details.</p>
+                    <div style="color: #fca5a5;">Error loading publications. Please refresh.</div>
                 `;
             }
         }
 
-        // Calculate statistics from actual data
-        function calculateStatistics() {
+        function calculateMetrics() {
             const total = allPublications.length;
-            
-            // Count unique domains
-            const domains = new Set();
-            allPublications.forEach(pub => {
-                pub.research_domains.forEach(d => domains.add(d));
-            });
-
-            // Count unique systems
+            const highRel = allPublications.filter(p => p.relevance === 'high').length;
             const systems = new Set();
+            let totalComplexity = 0;
+
             allPublications.forEach(pub => {
                 pub.biological_systems.forEach(s => systems.add(s));
+                totalComplexity += parseFloat(pub.complexity);
             });
 
-            // Calculate average duration
-            const validDurations = allPublications.filter(p => p.experiment_duration_days).map(p => p.experiment_duration_days);
-            const avgDuration = validDurations.length > 0 
-                ? Math.round(validDurations.reduce((a, b) => a + b, 0) / validDurations.length)
-                : 0;
+            const avgComplexity = total > 0 ? (totalComplexity / total).toFixed(1) : 0;
 
-            // Update stats
             document.getElementById('totalPubs').textContent = total;
-            document.getElementById('domainCount').textContent = domains.size;
-            document.getElementById('systemCount').textContent = systems.size;
-            document.getElementById('avgDuration').textContent = avgDuration;
-            document.getElementById('headerStats').textContent = `Analyzing ${total} Publications • ${domains.size} Research Domains • Powered by Firebase`;
+            document.getElementById('highRelevance').textContent = highRel;
+            document.getElementById('avgComplexity').textContent = avgComplexity;
+            document.getElementById('systemsStudied').textContent = systems.size;
         }
 
-        // Populate filter dropdowns
         function populateFilters() {
-            // Research domains
-            const domains = {};
-            allPublications.forEach(pub => {
-                pub.research_domains.forEach(d => {
-                    domains[d] = (domains[d] || 0) + 1;
-                });
-            });
-            const domainSelect = document.getElementById('domainFilter');
-            Object.entries(domains).sort((a, b) => b[1] - a[1]).forEach(([domain, count]) => {
-                const option = document.createElement('option');
-                option.value = domain;
-                option.textContent = `${domain.replace(/_/g, ' ')} (${count})`;
-                domainSelect.appendChild(option);
-            });
-
-            // Biological systems
             const systems = {};
             allPublications.forEach(pub => {
                 pub.biological_systems.forEach(s => {
                     systems[s] = (systems[s] || 0) + 1;
                 });
             });
+
             const systemSelect = document.getElementById('systemFilter');
             Object.entries(systems).sort((a, b) => b[1] - a[1]).forEach(([system, count]) => {
                 const option = document.createElement('option');
@@ -479,526 +593,94 @@
             });
         }
 
-        // Debounce utility
-        function debounce(func, delay) {
-            return function(...args) {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        window.debouncedFilterPublications = debounce(() => window.filterPublications(), 300);
-
-        // Filter publications
         window.filterPublications = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const domainFilter = document.getElementById('domainFilter').value;
+            const relevanceFilter = document.getElementById('relevanceFilter').value;
             const systemFilter = document.getElementById('systemFilter').value;
-            const yearFilter = document.getElementById('yearFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
 
-            let filtered = allPublications.filter(pub => {
-                // Search term
+            filteredPublications = allPublications.filter(pub => {
                 if (searchTerm) {
-                    const text = `${pub.title} ${pub.abstract} ${pub.research_domains.join(' ')} ${pub.biological_systems.join(' ')} ${pub.key_findings.join(' ')}`.toLowerCase();
+                    const text = `${pub.title} ${pub.abstract} ${pub.research_domains.join(' ')} ${pub.biological_systems.join(' ')}`.toLowerCase();
                     if (!text.includes(searchTerm)) return false;
                 }
-
-                // Domain filter
-                if (domainFilter && !pub.research_domains.includes(domainFilter)) return false;
-
-                // System filter
+                if (relevanceFilter && pub.relevance !== relevanceFilter) return false;
                 if (systemFilter && !pub.biological_systems.includes(systemFilter)) return false;
-
-                // Year filter
-                if (yearFilter && pub.publication_year) {
-                    const currentYear = new Date().getFullYear();
-                    if (yearFilter === 'recent' && pub.publication_year < currentYear - 5) return false;
-                    if (yearFilter === '2015-2020' && (pub.publication_year < 2015 || pub.publication_year > 2020)) return false;
-                    if (yearFilter === '2010-2015' && (pub.publication_year < 2010 || pub.publication_year > 2015)) return false;
-                    if (yearFilter === 'before-2010' && pub.publication_year >= 2010) return false;
-                }
-
                 return true;
             });
 
+            // Sort
+            if (sortFilter === 'year') {
+                filteredPublications.sort((a, b) => (b.publication_year || 0) - (a.publication_year || 0));
+            } else if (sortFilter === 'complexity') {
+                filteredPublications.sort((a, b) => parseFloat(b.complexity) - parseFloat(a.complexity));
+            } else if (sortFilter === 'duration') {
+                filteredPublications.sort((a, b) => (b.experiment_duration_days || 0) - (a.experiment_duration_days || 0));
+            } else {
+                filteredPublications.sort((a, b) => {
+                    const relOrder = { high: 3, medium: 2, low: 1 };
+                    return relOrder[b.relevance] - relOrder[a.relevance];
+                });
+            }
+
             displayedCount = 10;
-            displayPublications(filtered);
+            displayPublications();
         };
 
-        // Display publications
-        function displayPublications(publications) {
+        window.debouncedFilter = function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(filterPublications, 300);
+        };
+
+        function displayPublications() {
             const container = document.getElementById('publicationsList');
-            const toShow = publications.slice(0, displayedCount);
+            const toShow = filteredPublications.slice(0, displayedCount);
 
             if (toShow.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-gray-400">No publications found matching your criteria.</div>';
-                document.getElementById('resultCount').textContent = '0 publications';
-                document.getElementById('loadMoreBtn').style.display = 'none';
+                container.innerHTML = '<div class="no-results">No publications found matching your criteria.</div>';
+                document.getElementById('loadMoreContainer').style.display = 'none';
                 return;
             }
 
-            container.innerHTML = toShow.map(pub => `
-                <div class="publication-card bg-gray-800/60 rounded-xl p-6 border-2 border-gray-700/50 shadow-xl backdrop-blur-sm animate-slide-up" role="article">
-                    <h3 class="text-xl font-bold mb-3 text-blue-400 line-clamp-2">${pub.title}</h3>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        ${pub.publication_year ? `<span class="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-xs">📅 ${pub.publication_year}</span>` : ''}
-                        ${pub.experiment_duration_days ? `<span class="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-xs">⏱️ ${pub.experiment_duration_days} days</span>` : ''}
-                        <a href="${pub.link}" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-blue-700 text-blue-200 rounded-full text-xs hover:bg-blue-600 transition-colors">🔗 View</a>
-                    </div>
-                    <p class="text-gray-300 mb-4 leading-relaxed text-sm line-clamp-3">${pub.abstract || 'No abstract available.'}</p>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        ${pub.research_domains.slice(0, 3).map(d => `<span class="px-3 py-1 bg-blue-900 text-blue-200 rounded-full text-xs font-medium">🔬 ${d.replace(/_/g, ' ')}</span>`).join('')}
-                        ${pub.biological_systems.slice(0, 2).map(s => `<span class="px-3 py-1 bg-purple-900 text-purple-200 rounded-full text-xs font-medium">🧬 ${s.replace(/_/g, ' ')}</span>`).join('')}
-                    </div>
-                    ${pub.key_findings.length > 0 ? `
-                        <div class="mt-3 pt-3 border-t border-gray-700">
-                            <p class="text-gray-400 text-xs font-semibold mb-2">Key Findings:</p>
-                            <ul class="list-disc list-inside text-gray-300 text-xs space-y-1">
-                                ${pub.key_findings.slice(0, 2).map(f => `<li class="line-clamp-1">${f}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
+            container.innerHTML = toShow.map(pub => {
+                const excerpt = pub.abstract.length > 200 
+                    ? pub.abstract.substring(0, 200) + '...' 
+                    : pub.abstract;
 
-            document.getElementById('resultCount').textContent = `${publications.length} publication${publications.length !== 1 ? 's' : ''} found`;
-            document.getElementById('loadMoreBtn').style.display = displayedCount >= publications.length ? 'none' : 'block';
+                return `
+                    <div class="publication-card">
+                        <div class="pub-header">
+                            <div class="pub-id">${pub.id.substring(0, 8).toUpperCase()}</div>
+                            <div class="pub-content">
+                                <div class="pub-title">${pub.title}</div>
+                                <div class="pub-description">${excerpt}</div>
+                                <div class="pub-meta">
+                                    ${pub.key_findings.length > 0 ? `<div class="meta-item">🔬 Findings: <strong>${pub.key_findings.length}</strong></div>` : ''}
+                                    ${pub.experiment_duration_days ? `<div class="meta-item">⏱️ Duration: <strong>${pub.experiment_duration_days} days</strong></div>` : ''}
+                                    <div class="complexity-badge">Complexity: ${pub.complexity}/10</div>
+                                    ${pub.research_domains.slice(0, 2).map(d => 
+                                        `<span class="meta-badge">${d.replace(/_/g, ' ')}</span>`
+                                    ).join('')}
+                                    ${pub.biological_systems.slice(0, 1).map(s => 
+                                        `<span class="meta-badge immune">${s.replace(/_/g, ' ')}</span>`
+                                    ).join('')}
+                                    ${pub.relevance === 'high' ? '<span class="meta-badge high">High Relevance</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('loadMoreContainer').style.display = 
+                displayedCount >= filteredPublications.length ? 'none' : 'block';
         }
 
-        // Load more
         window.loadMore = function() {
             displayedCount += 10;
-            window.filterPublications();
-            document.getElementById('publicationsList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            displayPublications();
         };
 
-        // Initialize charts
-        function initCharts() {
-            const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#D1D5DB',
-                            font: { size: 14, family: 'Inter' },
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.9)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#3B82F6',
-                        borderWidth: 1,
-                        padding: 12
-                    }
-                },
-                animation: { duration: 2000, easing: 'easeInOutQuart' }
-            };
-
-            // Year distribution
-            const yearCounts = {};
-            allPublications.forEach(pub => {
-                if (pub.publication_year) {
-                    yearCounts[pub.publication_year] = (yearCounts[pub.publication_year] || 0) + 1;
-                }
-            });
-            const yearLabels = Object.keys(yearCounts).sort();
-            
-            chartInstances.yearChart = new Chart(document.getElementById('yearChart'), {
-                type: 'line',
-                data: {
-                    labels: yearLabels,
-                    datasets: [{
-                        label: 'Publications',
-                        data: yearLabels.map(y => yearCounts[y]),
-                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
-                        borderColor: '#3B82F6',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#9CA3AF' },
-                            grid: { color: '#374151' }
-                        },
-                        x: {
-                            ticks: { color: '#9CA3AF' },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-
-            // Domain distribution (top 10)
-            const domainCounts = {};
-            allPublications.forEach(pub => {
-                pub.research_domains.forEach(d => {
-                    domainCounts[d] = (domainCounts[d] || 0) + 1;
-                });
-            });
-            const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-            chartInstances.domainChart = new Chart(document.getElementById('domainChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: topDomains.map(([d]) => d.replace(/_/g, ' ')),
-                    datasets: [{
-                        data: topDomains.map(([, c]) => c),
-                        backgroundColor: [
-                            '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444',
-                            '#06B6D4', '#EC4899', '#84CC16', '#F97316', '#6366F1'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#1F2937'
-                    }]
-                },
-                options: { ...commonOptions, cutout: '60%' }
-            });
-
-            // System distribution
-            const systemCounts = {};
-            allPublications.forEach(pub => {
-                pub.biological_systems.forEach(s => {
-                    systemCounts[s] = (systemCounts[s] || 0) + 1;
-                });
-            });
-            const topSystems = Object.entries(systemCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
-            chartInstances.systemChart = new Chart(document.getElementById('systemChart'), {
-                type: 'bar',
-                data: {
-                    labels: topSystems.map(([s]) => s.replace(/_/g, ' ')),
-                    datasets: [{
-                        label: 'Publications',
-                        data: topSystems.map(([, c]) => c),
-                        backgroundColor: '#A855F7',
-                        borderColor: '#9333EA',
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    ...commonOptions,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { color: '#9CA3AF' },
-                            grid: { color: '#374151' }
-                        },
-                        y: {
-                            ticks: { color: '#9CA3AF' },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: { ...commonOptions.plugins, legend: { display: false } }
-                }
-            });
-
-            // Duration distribution
-            const durationRanges = { '0-30': 0, '31-60': 0, '61-90': 0, '91-180': 0, '180+': 0 };
-            allPublications.forEach(pub => {
-                const dur = pub.experiment_duration_days;
-                if (!dur) return;
-                if (dur <= 30) durationRanges['0-30']++;
-                else if (dur <= 60) durationRanges['31-60']++;
-                else if (dur <= 90) durationRanges['61-90']++;
-                else if (dur <= 180) durationRanges['91-180']++;
-                else durationRanges['180+']++;
-            });
-
-            chartInstances.durationChart = new Chart(document.getElementById('durationChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(durationRanges).map(r => r + ' days'),
-                    datasets: [{
-                        label: 'Experiments',
-                        data: Object.values(durationRanges),
-                        backgroundColor: '#F59E0B',
-                        borderColor: '#D97706',
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#9CA3AF' },
-                            grid: { color: '#374151' }
-                        },
-                        x: {
-                            ticks: { color: '#9CA3AF' },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: { ...commonOptions.plugins, legend: { display: false } }
-                }
-            });
-        }
-
-        // Populate insights tab
-        function populateInsights() {
-            // Top research areas
-            const domainCounts = {};
-            allPublications.forEach(pub => {
-                pub.research_domains.forEach(d => {
-                    domainCounts[d] = (domainCounts[d] || 0) + 1;
-                });
-            });
-            const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            document.getElementById('topAreas').innerHTML = topDomains.map(([domain, count]) => `
-                <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-green-500">
-                    <div class="flex justify-between items-center">
-                        <p class="font-semibold text-white">${domain.replace(/_/g, ' ')}</p>
-                        <span class="px-3 py-1 bg-green-900 text-green-200 rounded-full text-xs font-bold">${count}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            // Systems breakdown
-            const systemCounts = {};
-            allPublications.forEach(pub => {
-                pub.biological_systems.forEach(s => {
-                    systemCounts[s] = (systemCounts[s] || 0) + 1;
-                });
-            });
-            const topSystems = Object.entries(systemCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const maxCount = topSystems[0][1];
-            document.getElementById('systemsBreakdown').innerHTML = topSystems.map(([system, count]) => `
-                <div class="bg-gray-700/50 rounded-lg p-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <p class="font-semibold text-white">${system.replace(/_/g, ' ')}</p>
-                        <span class="text-purple-400 font-bold">${count}</span>
-                    </div>
-                    <div class="w-full bg-gray-600 rounded-full h-2">
-                        <div class="bg-purple-500 h-2 rounded-full" style="width: ${(count / maxCount) * 100}%"></div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Year trends
-            const yearCounts = {};
-            allPublications.forEach(pub => {
-                if (pub.publication_year) {
-                    yearCounts[pub.publication_year] = (yearCounts[pub.publication_year] || 0) + 1;
-                }
-            });
-            const years = Object.keys(yearCounts).sort();
-            const recentYears = years.slice(-5);
-            document.getElementById('trendAnalysis').innerHTML = recentYears.map(year => `
-                <div class="bg-gray-700/50 rounded-lg p-4 border-l-4 border-blue-500">
-                    <div class="flex justify-between items-center">
-                        <p class="font-semibold text-white">${year}</p>
-                        <span class="text-blue-400 text-lg font-bold">${yearCounts[year]} publications</span>
-                    </div>
-                </div>
-            `).join('');
-
-            // Duration insights
-            const durations = allPublications.filter(p => p.experiment_duration_days).map(p => p.experiment_duration_days);
-            const avgDur = durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-            const minDur = durations.length > 0 ? Math.min(...durations) : 0;
-            const maxDur = durations.length > 0 ? Math.max(...durations) : 0;
-            
-            document.getElementById('durationInsights').innerHTML = `
-                <div class="bg-gray-700/50 rounded-lg p-4">
-                    <p class="text-gray-400 text-sm mb-1">Average Duration</p>
-                    <p class="text-3xl font-bold text-orange-400">${avgDur} days</p>
-                </div>
-                <div class="bg-gray-700/50 rounded-lg p-4">
-                    <p class="text-gray-400 text-sm mb-1">Duration Range</p>
-                    <p class="text-xl font-bold text-white">${minDur} - ${maxDur} days</p>
-                </div>
-                <div class="bg-gray-700/50 rounded-lg p-4">
-                    <p class="text-gray-400 text-sm mb-1">Total Tracked Experiments</p>
-                    <p class="text-2xl font-bold text-white">${durations.length}</p>
-                </div>
-            `;
-
-            // Research highlights
-            document.getElementById('researchHighlights').innerHTML = `
-                <div class="bg-gray-800/70 rounded-lg p-6">
-                    <h4 class="text-xl font-bold mb-3 text-blue-400">📚 Publications</h4>
-                    <ul class="space-y-2 text-gray-300">
-                        <li>• ${allPublications.length} total publications</li>
-                        <li>• ${Object.keys(domainCounts).length} research domains</li>
-                        <li>• ${Object.keys(systemCounts).length} biological systems</li>
-                        <li>• Spanning ${years.length} years (${years[0]}-${years[years.length-1]})</li>
-                    </ul>
-                </div>
-                <div class="bg-gray-800/70 rounded-lg p-6">
-                    <h4 class="text-xl font-bold mb-3 text-purple-400">🔬 Top Domain</h4>
-                    <ul class="space-y-2 text-gray-300">
-                        <li>• <strong>${topDomains[0][0].replace(/_/g, ' ')}</strong></li>
-                        <li>• ${topDomains[0][1]} publications</li>
-                        <li>• ${Math.round((topDomains[0][1] / allPublications.length) * 100)}% of total</li>
-                    </ul>
-                </div>
-                <div class="bg-gray-800/70 rounded-lg p-6">
-                    <h4 class="text-xl font-bold mb-3 text-orange-400">⏱️ Experiments</h4>
-                    <ul class="space-y-2 text-gray-300">
-                        <li>• ${durations.length} tracked experiments</li>
-                        <li>• ${avgDur} days average</li>
-                        <li>• ${maxDur} days longest</li>
-                        <li>• ${minDur} days shortest</li>
-                    </ul>
-                </div>
-            `;
-        }
-
-        // Knowledge graph
-        window.showTab = function(tabId, event) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                btn.setAttribute('aria-selected', 'false');
-            });
-            document.getElementById(tabId).classList.add('active');
-            if (event) {
-                event.target.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                event.target.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                event.target.setAttribute('aria-selected', 'true');
-            }
-            if (tabId === 'knowledge-graph' && !graphInitialized) {
-                setTimeout(initKnowledgeGraph, 100);
-                graphInitialized = true;
-            }
-        };
-
-        function initKnowledgeGraph() {
-            const container = document.getElementById('network-graph');
-            container.innerHTML = '';
-            
-            const width = container.clientWidth;
-            const height = 700;
-
-            // Build nodes and links from actual data
-            const domainCounts = {};
-            const systemCounts = {};
-            const connections = {};
-
-            allPublications.forEach(pub => {
-                pub.research_domains.forEach(d => {
-                    domainCounts[d] = (domainCounts[d] || 0) + 1;
-                    pub.biological_systems.forEach(s => {
-                        const key = `${d}|||${s}`;
-                        connections[key] = (connections[key] || 0) + 1;
-                    });
-                });
-                pub.biological_systems.forEach(s => {
-                    systemCounts[s] = (systemCounts[s] || 0) + 1;
-                });
-            });
-
-            const nodes = [
-                ...Object.entries(domainCounts).map(([d, count]) => ({
-                    id: d,
-                    type: 'domain',
-                    value: count,
-                    label: d.replace(/_/g, ' ')
-                })),
-                ...Object.entries(systemCounts).map(([s, count]) => ({
-                    id: s,
-                    type: 'system',
-                    value: count,
-                    label: s.replace(/_/g, ' ')
-                }))
-            ];
-
-            const links = Object.entries(connections).map(([key, count]) => {
-                const [source, target] = key.split('|||');
-                return { source, target, value: count };
-            }).filter(link => link.value > 2); // Only show connections with >2 pubs
-
-            const svg = d3.select('#network-graph')
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height);
-
-            const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-                .force('charge', d3.forceManyBody().strength(-300))
-                .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(50));
-
-            const link = svg.append('g')
-                .selectAll('line')
-                .data(links)
-                .join('line')
-                .attr('stroke', '#6B7280')
-                .attr('stroke-opacity', 0.6)
-                .attr('stroke-width', d => Math.sqrt(d.value));
-
-            const node = svg.append('g')
-                .selectAll('g')
-                .data(nodes)
-                .join('g')
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended));
-
-            node.append('circle')
-                .attr('r', d => Math.sqrt(d.value) * 3)
-                .attr('fill', d => d.type === 'domain' ? '#3B82F6' : '#A855F7')
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 2);
-
-            node.append('text')
-                .text(d => d.label.length > 15 ? d.label.substring(0, 12) + '...' : d.label)
-                .attr('x', 0)
-                .attr('y', 5)
-                .attr('text-anchor', 'middle')
-                .attr('fill', '#fff')
-                .attr('font-size', '9px')
-                .attr('font-weight', 'bold')
-                .attr('pointer-events', 'none');
-
-            node.append('title')
-                .text(d => `${d.label}\n${d.value} publications`);
-
-            simulation.on('tick', () => {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-
-                node.attr('transform', d => `translate(${d.x},${d.y})`);
-            });
-
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
-        }
-
-        // Initialize on load
         document.addEventListener('DOMContentLoaded', loadPublications);
     </script>
 </body>
