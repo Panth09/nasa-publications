@@ -1,171 +1,309 @@
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import {
-        getFirestore, collection, doc, writeBatch,
-        serverTimestamp               // <-- NEW
-    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-    // ---- YOUR CONFIG (keep it) ----
-    const firebaseConfig = {
-        apiKey: "AIzaSyDbxPfySgHZq0kE_FbewTnIWioJPxwTqks",
-        authDomain: "nasa-bio-engine.firebaseapp.com",
-        projectId: "nasa-bio-engine",
-        storageBucket: "nasa-bio-engine.firebasestorage.app",
-        messagingSenderId: "463317555755",
-        appId: "1:463317555755:web:d8f27286a31be14ea0686e",
-        measurementId: "G-QN49G284KM"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-    window.db = db;               // keep for debugging
-
-    /* --------------------------------------------------------------
-       CSV → Object (unchanged, only tiny safety tweaks)
-       -------------------------------------------------------------- */
-    function parseCSV(text) {
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-
-            const values = [];
-            let cur = '';
-            let inQuote = false;
-
-            for (let j = 0; j < lines[i].length; j++) {
-                const ch = lines[i][j];
-                if (ch === '"') inQuote = !inQuote;
-                else if (ch === ',' && !inQuote) { values.push(cur.trim()); cur = ''; }
-                else cur += ch;
-            }
-            values.push(cur.trim());
-
-            if (values.length === headers.length) {
-                const row = {};
-                headers.forEach((h, idx) => row[h] = values[idx]);
-                data.push(row);
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV to Firebase</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
-        return data;
-    }
-
-    /* --------------------------------------------------------------
-       Helper: safe JSON parse (prevents crash on malformed strings)
-       -------------------------------------------------------------- */
-    const safeJSON = (str, fallback = []) => {
-        if (!str) return fallback;
-        try { return JSON.parse(str); }
-        catch { return fallback; }
-    };
-
-    /* --------------------------------------------------------------
-       Logging
-       -------------------------------------------------------------- */
-    function log(msg, type = 'info') {
-        const logDiv = document.getElementById('log');
-        logDiv.style.display = 'block';
-        const el = document.createElement('div');
-        el.className = `log-item ${type}`;
-        el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        logDiv.appendChild(el);
-        logDiv.scrollTop = logDiv.scrollHeight;
-    }
-
-    /* --------------------------------------------------------------
-       MAIN UPLOAD FUNCTION
-       -------------------------------------------------------------- */
-    window.uploadData = async function () {
-        const fileInput   = document.getElementById('csvFile');
-        const btn         = document.getElementById('uploadBtn');
-        const progDiv     = document.getElementById('progress');
-        const progFill    = document.getElementById('progressFill');
-        const progText    = document.getElementById('progressText');
-
-        if (!fileInput.files[0]) return alert('Select a CSV first!');
-
-        btn.disabled = true;
-        progDiv.style.display = 'block';
-        log('Starting…', 'info');
-
-        try {
-            const csvText = await fileInput.files[0].text();
-            log('CSV read', 'success');
-
-            const rows = parseCSV(csvText);
-            log(`Parsed ${rows.length} rows`, 'success');
-
-            const BATCH = 500;               // Firestore limit
-            let uploaded = 0;
-
-            for (let i = 0; i < rows.length; i += BATCH) {
-                const batch = writeBatch(db);
-                const slice = rows.slice(i, i + BATCH);
-
-                slice.forEach(row => {
-                    const ref = doc(collection(db, 'publications'));
-
-                    // ---------- CLEAN / CAST ----------
-                    const clean = {
-                        // basic strings
-                        id:            row.id            ?? '',
-                        pmcid:         row.pmcid         ?? '',
-                        title:         row.title         ?? '',
-                        link:          row.link          ?? '',
-                        abstract:      row.abstract      ?? '',
-                        content_sample:row.content_sample?? '',
-                        ai_response:   row.ai_response   ?? '',
-                        ai_role:       row.ai_role       ?? '',
-                        ai_model:      row.ai_model      ?? '',
-                        ai_confidence: row.ai_confidence ?? '',
-                        finish_reason: row.finish_reason ?? '',
-                        mission_relevance: row.mission_relevance ?? '',
-                        // JSON strings → real arrays / objects
-                        key_findings:     safeJSON(row.key_findings, []),
-                        research_roles:   safeJSON(row.research_roles, []),
-                        research_domains: safeJSON(row.research_domains, []),
-                        biological_systems: safeJSON(row.biological_systems, []),
-                        space_factors:    safeJSON(row.space_factors, {}),
-                        usage_stats:      safeJSON(row.usage_stats, {}),
-                        // numbers
-                        findings_count:   parseInt(row.findings_count)   || 0,
-                        relevance_score:  parseInt(row.relevance_score)  || 0,
-                        space_complexity: parseInt(row.space_complexity)|| 0,
-                        citations_count:  parseInt(row.citations_count)  || 0,
-                        publication_year: row.publication_year ? parseInt(row.publication_year) : null,
-                        experiment_duration_days: row.experiment_duration_days ? parseInt(row.experiment_duration_days) : null,
-                        // booleans / dates
-                        processed:      row.processed === 'true',
-                        processed_at:   row.processed_at || null,
-                        // **use server timestamp** (most reliable)
-                        created_at:     serverTimestamp(),
-                        updated_at:     serverTimestamp()
-                    };
-
-                    batch.set(ref, clean);
-                });
-
-                await batch.commit();
-                uploaded += slice.length;
-
-                const pct = Math.round((uploaded / rows.length) * 100);
-                progFill.style.width = pct + '%';
-                progFill.textContent = pct + '%';
-                progText.textContent = `Uploaded ${uploaded} / ${rows.length}`;
-                log(`Batch ${Math.floor(i/BATCH)+1} done (${uploaded})`, 'success');
-            }
-
-            log('ALL DONE!', 'success');
-            progText.textContent = `COMPLETE – ${uploaded} docs`;
-            alert('Upload finished – you can now lock down Firestore rules again.');
-
-        } catch (e) {
-            log(`ERROR: ${e.message}`, 'error');
-            console.error(e);
-            alert('Upload failed – see log');
-        } finally {
-            btn.disabled = false;
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         }
-    };
-</script>
+        h1 { color: #2c3e50; margin-bottom: 8px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 1.1em; }
+
+        .config-section {
+            background: #fff3cd;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 5px solid #ffc107;
+            font-size: 0.95em;
+        }
+        .config-section code {
+            background: #fff; padding: 2px 8px; border-radius: 4px; color: #d63384;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 16px;
+            margin: 20px 0;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            cursor: pointer;
+            background: #f9f9ff;
+            font-size: 1em;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        #progress {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 36px;
+            background: #e0e0e0;
+            border-radius: 18px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        #log {
+            max-height: 320px;
+            overflow-y: auto;
+            background: #f1f3f5;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .log-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .success { color: #27ae60; }
+        .error   { color: #e74c3c; }
+        .info    { color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload NASA Publications</h1>
+        <p class="subtitle">CSV → Firebase Firestore (One-time upload)</p>
+
+        <div class="config-section">
+            <h3>Before Upload</h3>
+            <p>Make sure you have:</p>
+            <ol>
+                <li>Enabled <strong>Firestore</strong> in your Firebase project</li>
+                <li>Deployed <strong>temporary open rules</strong>:</li>
+            </ol>
+            <code>allow read, write: if true;</code>
+            <p><strong>After upload</strong>: Lock rules again!</p>
+        </div>
+
+        <input type="file" id="csvFile" accept=".csv" />
+        <button id="uploadBtn" onclick="uploadData()">Upload to Firebase</button>
+
+        <div id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <p id="progressText">Ready...</p>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <!-- Firebase SDK + Upload Logic -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import {
+            getFirestore, collection, doc, writeBatch, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // YOUR FIREBASE CONFIG (KEEP THIS)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbxPfySgHZq0kE_FbewTnIWioJPxwTqks",
+            authDomain: "nasa-bio-engine.firebaseapp.com",
+            projectId: "nasa-bio-engine",
+            storageBucket: "nasa-bio-engine.firebasestorage.app",
+            messagingSenderId: "463317555755",
+            appId: "1:463317555755:web:d8f27286a31be14ea0686e",
+            measurementId: "G-QN49G284KM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+
+        // Safe JSON parse
+        const safeJSON = (str, fallback) => {
+            if (!str) return fallback;
+            try { return JSON.parse(str); }
+            catch { return fallback; }
+        };
+
+        // Log with timestamp
+        function log(msg, type = 'info') {
+            const logDiv = document.getElementById('log');
+            logDiv.style.display = 'block';
+            const item = document.createElement('div');
+            item.className = `log-item ${type}`;
+            item.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logDiv.appendChild(item);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Parse CSV (handles quoted commas)
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+
+                const values = [];
+                let cur = '';
+                let inQuote = false;
+
+                for (let j = 0; j < lines[i].length; j++) {
+                    const ch = lines[i][j];
+                    if (ch === '"') inQuote = !inQuote;
+                    else if (ch === ',' && !inQuote) { values.push(cur.trim()); cur = ''; }
+                    else cur += ch;
+                }
+                values.push(cur.trim());
+
+                if (values.length === headers.length) {
+                    const obj = {};
+                    headers.forEach((h, idx) => obj[h] = values[idx]);
+                    data.push(obj);
+                }
+            }
+            return data;
+        }
+
+        // MAIN UPLOAD
+        window.uploadData = async function () {
+            const fileInput = document.getElementById('csvFile');
+            const btn = document.getElementById('uploadBtn');
+            const progDiv = document.getElementById('progress');
+            const progFill = document.getElementById('progressFill');
+            const progText = document.getElementById('progressText');
+
+            if (!fileInput.files[0]) return alert('Please select a CSV file!');
+
+            btn.disabled = true;
+            progDiv.style.display = 'block';
+            document.getElementById('log').innerHTML = '';
+            log('Starting upload...', 'info');
+
+            try {
+                const text = await fileInput.files[0].text();
+                log('CSV loaded', 'success');
+
+                const rows = parseCSV(text);
+                log(`Parsed ${rows.length} rows`, 'success');
+
+                const BATCH_SIZE = 500;
+                let uploaded = 0;
+
+                for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                    const batch = writeBatch(db);
+                    const slice = rows.slice(i, i + BATCH_SIZE);
+
+                    slice.forEach(row => {
+                        const ref = doc(collection(db, 'publications'));
+
+                        const clean = {
+                            // Strings
+                            id: row.id ?? '',
+                            pmcid: row.pmcid ?? '',
+                            title: row.title ?? '',
+                            link: row.link ?? '',
+                            abstract: row.abstract ?? '',
+                            content_sample: row.content_sample ?? '',
+                            ai_response: row.ai_response ?? '',
+                            ai_role: row.ai_role ?? '',
+                            ai_model: row.ai_model ?? '',
+                            ai_confidence: row.ai_confidence ?? '',
+                            finish_reason: row.finish_reason ?? '',
+                            mission_relevance: row.mission_relevance ?? '',
+
+                            // JSON → Real arrays/objects
+                            key_findings: safeJSON(row.key_findings, []),
+                            research_roles: safeJSON(row.research_roles, []),
+                            research_domains: safeJSON(row.research_domains, []),
+                            biological_systems: safeJSON(row.biological_systems, []),
+                            space_factors: safeJSON(row.space_factors, {}),
+                            usage_stats: safeJSON(row.usage_stats, {}),
+
+                            // Numbers
+                            findings_count: parseInt(row.findings_count) || 0,
+                            relevance_score: parseInt(row.relevance_score) || 0,
+                            space_complexity: parseInt(row.space_complexity) || 0,
+                            citations_count: parseInt(row.citations_count) || 0,
+                            publication_year: row.publication_year ? parseInt(row.publication_year) : null,
+                            experiment_duration_days: row.experiment_duration_days ? parseInt(row.experiment_duration_days) : null,
+
+                            // Booleans / Dates
+                            processed: row.processed === 'true',
+                            processed_at: row.processed_at || null,
+                            created_at: serverTimestamp(),
+                            updated_at: serverTimestamp()
+                        };
+
+                        batch.set(ref, clean);
+                    });
+
+                    await batch.commit();
+                    uploaded += slice.length;
+
+                    const pct = Math.round((uploaded / rows.length) * 100);
+                    progFill.style.width = pct + '%';
+                    progFill.textContent = pct + '%';
+                    progText.textContent = `Uploaded ${uploaded} / ${rows.length}`;
+                    log(`Batch ${Math.floor(i/BATCH_SIZE)+1} → ${uploaded} docs`, 'success');
+                }
+
+                log('UPLOAD COMPLETE!', 'success');
+                progText.textContent = `SUCCESS: ${uploaded} documents uploaded`;
+                alert('Upload complete! Now secure your Firestore rules.');
+
+            } catch (err) {
+                log(`ERROR: ${err.message}`, 'error');
+                console.error(err);
+                alert('Upload failed. Check log.');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
