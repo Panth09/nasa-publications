@@ -1,0 +1,13 @@
+# Run this in your terminal (in your project folder)
+cat > firestore.rules << 'EOF'
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TEMPORARY: ALLOW ANYONE TO READ AND WRITE
+    // ONLY USE THIS WHILE UPLOADING!
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+EOF
