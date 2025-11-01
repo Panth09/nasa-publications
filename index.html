@@ -17,6 +17,22 @@
             color: #ffffff;
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #e0e7ff 100%);
+            color: #1f2937;
+        }
+
+        body.high-contrast {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        body.nasa-blue {
+            background: linear-gradient(135deg, #0b3d91 0%, #1c5ba8 50%, #0b3d91 100%);
+            color: #ffffff;
         }
 
         .container {
@@ -88,6 +104,21 @@
             transition: all 0.3s;
         }
 
+        body.light-mode .metric-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        body.high-contrast .metric-card {
+            background: #1a1a1a;
+            border: 2px solid #ffffff;
+        }
+
+        body.nasa-blue .metric-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
         .metric-card:hover {
             background: rgba(255, 255, 255, 0.15);
             transform: translateY(-4px);
@@ -114,6 +145,27 @@
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 24px;
+        }
+
+        body.light-mode .filters-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        body.light-mode .search-box,
+        body.light-mode .filter-select {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: #1f2937;
+        }
+
+        body.light-mode .search-box::placeholder {
+            color: rgba(31, 41, 55, 0.5);
+        }
+
+        body.light-mode .filter-select option {
+            background: #ffffff;
+            color: #1f2937;
         }
 
         .search-box {
@@ -226,6 +278,19 @@
             border-radius: 12px;
             padding: 24px;
             transition: all 0.3s;
+        }
+
+        body.light-mode .publication-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        body.light-mode .pub-title {
+            color: #3b82f6;
+        }
+
+        body.light-mode .pub-description {
+            color: #4b5563;
         }
 
         .publication-card:hover {
@@ -394,6 +459,250 @@
                 font-size: 24px;
             }
         }
+
+        .footer {
+            margin-top: 60px;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        body.light-mode .footer {
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .footer-text {
+            font-size: 16px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-heart {
+            color: #ef4444;
+            font-size: 20px;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .footer-developers {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .developer-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .developer-card {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .developer-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-mode .developer-card:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .linkedin-icon {
+            width: 32px;
+            height: 32px;
+            background: #0077b5;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .developer-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .developer-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .developer-role {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.light-mode .modal-content {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #1f2937;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .theme-option {
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .theme-option:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-option.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .theme-dark {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        .theme-light {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #1f2937;
+        }
+
+        .theme-contrast {
+            background: #000000;
+            border: 2px solid #ffffff;
+        }
+
+        .theme-nasa {
+            background: linear-gradient(135deg, #0b3d91 0%, #1c5ba8 100%);
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.light-mode .analytics-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .analytics-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .analytics-label {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .chart-container {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -534,6 +843,88 @@
 
             <div class="load-more" id="loadMoreContainer">
                 <button class="load-more-btn" onclick="loadMore()">Load More Publications</button>
+            </div>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="footer-content">
+                    <div class="footer-text">
+                        <span>Developed with</span>
+                        <span class="footer-heart">❤️</span>
+                        <span>by</span>
+                    </div>
+                    <div class="footer-developers">
+                        <a href="https://www.linkedin.com/in/panth-maheshwari/" target="_blank" rel="noopener noreferrer" class="developer-card">
+                            <div class="linkedin-icon">in</div>
+                            <div class="developer-info">
+                                <div class="developer-name">Panth Maheshwari</div>
+                                <div class="developer-role">Full Stack Developer</div>
+                            </div>
+                        </a>
+                        <a href="https://www.linkedin.com/in/dipak-raval/" target="_blank" rel="noopener noreferrer" class="developer-card">
+                            <div class="linkedin-icon">in</div>
+                            <div class="developer-info">
+                                <div class="developer-name">Dipak Raval</div>
+                                <div class="developer-role">Full Stack Developer</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div style="font-size: 13px; opacity: 0.6; text-align: center;">
+                        NASA Bioscience Research Explorer © 2025
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div id="themeModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeThemeModal()">✕</button>
+            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Choose Theme</h2>
+            <p style="opacity: 0.7; font-size: 14px;">Select your preferred color scheme</p>
+            <div class="theme-grid">
+                <div class="theme-option theme-dark" onclick="setTheme('dark')">
+                    <div style="font-size: 32px; margin-bottom: 8px;">🌙</div>
+                    <div style="font-weight: 600;">Dark Mode</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Default theme</div>
+                </div>
+                <div class="theme-option theme-light" onclick="setTheme('light')">
+                    <div style="font-size: 32px; margin-bottom: 8px;">☀️</div>
+                    <div style="font-weight: 600;">Light Mode</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Easy on eyes</div>
+                </div>
+                <div class="theme-option theme-contrast" onclick="setTheme('contrast')">
+                    <div style="font-size: 32px; margin-bottom: 8px;">⚡</div>
+                    <div style="font-weight: 600;">High Contrast</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Maximum visibility</div>
+                </div>
+                <div class="theme-option theme-nasa" onclick="setTheme('nasa')">
+                    <div style="font-size: 32px; margin-bottom: 8px;">🚀</div>
+                    <div style="font-weight: 600;">NASA Blue</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">Official colors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analyticsModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeAnalyticsModal()">✕</button>
+            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">📊 Analytics Dashboard</h2>
+            <p style="opacity: 0.7; font-size: 14px; margin-bottom: 24px;">Comprehensive research insights</p>
+            
+            <div class="analytics-grid" id="analyticsGrid"></div>
+            
+            <div class="chart-container">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">📈 Publications Over Time</h3>
+                <div id="analyticsChart" style="color: rgba(255,255,255,0.7); font-size: 14px;"></div>
+            </div>
+
+            <div class="chart-container" style="margin-top: 20px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">🔬 Top Research Domains</h3>
+                <div id="domainsChart" style="color: rgba(255,255,255,0.7); font-size: 14px;"></div>
             </div>
         </div>
     </div>
@@ -873,6 +1264,184 @@
             filterPublications();
         };
 
+        window.showAnalytics = function() {
+            const modal = document.getElementById('analyticsModal');
+            modal.classList.add('active');
+            generateAnalytics();
+        };
+
+        window.closeAnalyticsModal = function() {
+            document.getElementById('analyticsModal').classList.remove('active');
+        };
+
+        function generateAnalytics() {
+            // Calculate analytics
+            const total = allPublications.length;
+            const avgComplexity = (allPublications.reduce((sum, pub) => sum + parseFloat(pub.complexity), 0) / total).toFixed(1);
+            
+            const durations = allPublications.filter(p => p.experiment_duration_days).map(p => p.experiment_duration_days);
+            const avgDuration = durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
+            
+            const highRelevance = allPublications.filter(p => p.relevance === 'high').length;
+            const mediumRelevance = allPublications.filter(p => p.relevance === 'medium').length;
+            const lowRelevance = allPublications.filter(p => p.relevance === 'low').length;
+
+            const uniqueSystems = new Set();
+            const uniqueDomains = new Set();
+            allPublications.forEach(pub => {
+                pub.biological_systems.forEach(s => uniqueSystems.add(s));
+                pub.research_domains.forEach(d => uniqueDomains.add(d));
+            });
+
+            const years = allPublications.filter(p => p.publication_year).map(p => p.publication_year);
+            const oldestYear = Math.min(...years);
+            const newestYear = Math.max(...years);
+
+            // Render analytics cards
+            document.getElementById('analyticsGrid').innerHTML = `
+                <div class="analytics-card">
+                    <div class="analytics-label">📚 Total Publications</div>
+                    <div class="analytics-value">${total}</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">⭐ High Relevance</div>
+                    <div class="analytics-value">${highRelevance}</div>
+                    <div style="font-size: 12px; opacity: 0.7;">${Math.round(highRelevance/total*100)}% of total</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">🎯 Avg Complexity</div>
+                    <div class="analytics-value">${avgComplexity}<span style="font-size: 18px; opacity: 0.7;">/10</span></div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">⏱️ Avg Duration</div>
+                    <div class="analytics-value">${avgDuration}</div>
+                    <div style="font-size: 12px; opacity: 0.7;">days</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">🔬 Biological Systems</div>
+                    <div class="analytics-value">${uniqueSystems.size}</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">🧬 Research Domains</div>
+                    <div class="analytics-value">${uniqueDomains.size}</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">📅 Year Range</div>
+                    <div class="analytics-value" style="font-size: 24px;">${oldestYear}-${newestYear}</div>
+                    <div style="font-size: 12px; opacity: 0.7;">${newestYear - oldestYear + 1} years</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-label">📊 Relevance Distribution</div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px; font-size: 13px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="font-weight: 700; color: #10b981;">${highRelevance}</div>
+                            <div style="opacity: 0.7;">High</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="font-weight: 700; color: #f59e0b;">${mediumRelevance}</div>
+                            <div style="opacity: 0.7;">Med</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="font-weight: 700; color: #6b7280;">${lowRelevance}</div>
+                            <div style="opacity: 0.7;">Low</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Year distribution chart
+            const yearCounts = {};
+            allPublications.forEach(pub => {
+                if (pub.publication_year) {
+                    yearCounts[pub.publication_year] = (yearCounts[pub.publication_year] || 0) + 1;
+                }
+            });
+            const yearData = Object.entries(yearCounts).sort((a, b) => a[0] - b[0]);
+            const maxYearCount = Math.max(...Object.values(yearCounts));
+            
+            document.getElementById('analyticsChart').innerHTML = yearData.map(([year, count]) => `
+                <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
+                    <div style="width: 60px; font-weight: 600;">${year}</div>
+                    <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); height: 100%; width: ${(count/maxYearCount)*100}%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 12px; font-weight: 600;"></div>
+                    </div>
+                    <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
+                </div>
+            `).join('');
+
+            // Domain distribution chart
+            const domainCounts = {};
+            allPublications.forEach(pub => {
+                pub.research_domains.forEach(d => {
+                    domainCounts[d] = (domainCounts[d] || 0) + 1;
+                });
+            });
+            const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const maxDomainCount = topDomains[0][1];
+
+            document.getElementById('domainsChart').innerHTML = topDomains.map(([domain, count]) => `
+                <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 12px;">
+                    <div style="width: 180px; font-weight: 600; font-size: 13px;">${domain.replace(/_/g, ' ')}</div>
+                    <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 24px; position: relative; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #10b981, #059669); height: 100%; width: ${(count/maxDomainCount)*100}%; border-radius: 4px;"></div>
+                    </div>
+                    <div style="width: 40px; font-weight: 600; text-align: right;">${count}</div>
+                </div>
+            `).join('');
+        }
+
+        window.toggleDarkMode = function() {
+            document.getElementById('themeModal').classList.add('active');
+            updateThemeSelection();
+        };
+
+        window.closeThemeModal = function() {
+            document.getElementById('themeModal').classList.remove('active');
+        };
+
+        window.setTheme = function(theme) {
+            const body = document.body;
+            body.classList.remove('light-mode', 'high-contrast', 'nasa-blue');
+            
+            let icon = '🌙';
+            if (theme === 'light') {
+                body.classList.add('light-mode');
+                icon = '☀️';
+            } else if (theme === 'contrast') {
+                body.classList.add('high-contrast');
+                icon = '⚡';
+            } else if (theme === 'nasa') {
+                body.classList.add('nasa-blue');
+                icon = '🚀';
+            }
+            
+            document.getElementById('themeIcon').textContent = icon;
+            localStorage.setItem('theme', theme);
+            updateThemeSelection();
+        };
+
+        function updateThemeSelection() {
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            const themeMap = {
+                'dark': 0,
+                'light': 1,
+                'contrast': 2,
+                'nasa': 3
+            };
+            const options = document.querySelectorAll('.theme-option');
+            if (options[themeMap[currentTheme]]) {
+                options[themeMap[currentTheme]].classList.add('active');
+            }
+        }
+
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        }
+
         window.exportData = function() {
             const csv = [
                 ['ID', 'Title', 'Year', 'Duration (days)', 'Complexity', 'Relevance', 'Systems', 'Domains', 'Abstract'].join(','),
@@ -898,15 +1467,17 @@
             window.URL.revokeObjectURL(url);
         };
 
-        window.showAnalytics = function() {
-            alert('Analytics Dashboard Coming Soon!\n\nFeatures:\n• Publication trends over time\n• Research domain distribution\n• Complexity analysis\n• Citation metrics\n• Collaboration networks');
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
         };
 
-        window.toggleDarkMode = function() {
-            alert('Theme switcher coming soon!\n\nPlanned themes:\n• Dark Mode (current)\n• Light Mode\n• High Contrast\n• NASA Blue');
-        };
-
-        document.addEventListener('DOMContentLoaded', loadPublications);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedTheme();
+            loadPublications();
+        });
     </script>
 </body>
 </html>
