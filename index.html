@@ -135,6 +135,29 @@
             margin-bottom: 20px;
         }
 
+        .clear-search {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .clear-search:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
         .search-icon {
             position: absolute;
             left: 16px;
@@ -384,9 +407,17 @@
         </div>
 
         <div class="top-actions">
-            <button class="process-btn">
-                <span>🔄</span>
-                Process New Data
+            <button class="process-btn" onclick="exportData()">
+                <span>📥</span>
+                Export Data
+            </button>
+            <button class="process-btn" onclick="showAnalytics()" style="margin-left: 12px;">
+                <span>📊</span>
+                Analytics
+            </button>
+            <button class="process-btn" onclick="toggleDarkMode()" style="margin-left: 12px; background: rgba(255, 255, 255, 0.2);">
+                <span id="themeIcon">🌙</span>
+                Theme
             </button>
         </div>
 
@@ -416,6 +447,9 @@
             </div>
 
             <div class="filters-section">
+                <div class="filter-header">
+                    <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 600;">🎯 Advanced Filters & Search</h3>
+                </div>
                 <div class="search-wrapper">
                     <span class="search-icon">🔍</span>
                     <input 
@@ -425,10 +459,11 @@
                         placeholder="Search publications..."
                         oninput="debouncedFilter()"
                     >
+                    <button class="clear-search" id="clearSearch" onclick="clearSearch()" style="display: none;">✕</button>
                 </div>
                 <div class="filters-grid">
                     <div class="filter-group">
-                        <label>All Relevance</label>
+                        <label>Relevance Level</label>
                         <select class="filter-select" id="relevanceFilter" onchange="filterPublications()">
                             <option value="">All Relevance</option>
                             <option value="high">High Relevance</option>
@@ -437,26 +472,62 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>All Systems</label>
+                        <label>Biological System</label>
                         <select class="filter-select" id="systemFilter" onchange="filterPublications()">
                             <option value="">All Systems</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Sort by Relevance</label>
+                        <label>Research Domain</label>
+                        <select class="filter-select" id="domainFilter" onchange="filterPublications()">
+                            <option value="">All Domains</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Year Range</label>
+                        <select class="filter-select" id="yearFilter" onchange="filterPublications()">
+                            <option value="">All Years</option>
+                            <option value="recent">Last 5 Years</option>
+                            <option value="2015-2020">2015-2020</option>
+                            <option value="2010-2015">2010-2015</option>
+                            <option value="before-2010">Before 2010</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Experiment Duration</label>
+                        <select class="filter-select" id="durationFilter" onchange="filterPublications()">
+                            <option value="">All Durations</option>
+                            <option value="short">Short (0-30 days)</option>
+                            <option value="medium">Medium (31-90 days)</option>
+                            <option value="long">Long (90+ days)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Sort By</label>
                         <select class="filter-select" id="sortFilter" onchange="filterPublications()">
                             <option value="relevance">Sort by Relevance</option>
-                            <option value="year">Sort by Year</option>
+                            <option value="year">Sort by Year (Newest)</option>
                             <option value="complexity">Sort by Complexity</option>
                             <option value="duration">Sort by Duration</option>
+                            <option value="title">Sort by Title (A-Z)</option>
                         </select>
+                    </div>
+                </div>
+                <div class="active-filters" id="activeFilters" style="margin-top: 16px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: 13px; color: rgba(255,255,255,0.7);">Active Filters:</span>
+                        <div id="filterBadges" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+                        <button onclick="clearAllFilters()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; font-weight: 600;">Clear All</button>
                     </div>
                 </div>
             </div>
 
             <div class="top-stories">
                 <span class="top-stories-icon">⭐</span>
-                <span class="top-stories-text">Top Stories: Highlighting cutting-edge research...</span>
+                <span class="top-stories-text">
+                    Showing <strong id="resultsCount">0</strong> of <strong id="totalCount">0</strong> publications
+                    <span id="filterInfo" style="margin-left: 8px; color: rgba(255,255,255,0.6);"></span>
+                </span>
             </div>
 
             <div class="publications-list" id="publicationsList"></div>
@@ -578,9 +649,14 @@
 
         function populateFilters() {
             const systems = {};
+            const domains = {};
+            
             allPublications.forEach(pub => {
                 pub.biological_systems.forEach(s => {
                     systems[s] = (systems[s] || 0) + 1;
+                });
+                pub.research_domains.forEach(d => {
+                    domains[d] = (domains[d] || 0) + 1;
                 });
             });
 
@@ -591,13 +667,37 @@
                 option.textContent = `${system.replace(/_/g, ' ')} (${count})`;
                 systemSelect.appendChild(option);
             });
+
+            const domainSelect = document.getElementById('domainFilter');
+            Object.entries(domains).sort((a, b) => b[1] - a[1]).forEach(([domain, count]) => {
+                const option = document.createElement('option');
+                option.value = domain;
+                option.textContent = `${domain.replace(/_/g, ' ')} (${count})`;
+                domainSelect.appendChild(option);
+            });
         }
 
         window.filterPublications = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const relevanceFilter = document.getElementById('relevanceFilter').value;
             const systemFilter = document.getElementById('systemFilter').value;
+            const domainFilter = document.getElementById('domainFilter').value;
+            const yearFilter = document.getElementById('yearFilter').value;
+            const durationFilter = document.getElementById('durationFilter').value;
             const sortFilter = document.getElementById('sortFilter').value;
+
+            // Show clear button if search has text
+            document.getElementById('clearSearch').style.display = searchTerm ? 'flex' : 'none';
+
+            // Update active filter badges
+            updateFilterBadges({
+                search: searchTerm,
+                relevance: relevanceFilter,
+                system: systemFilter,
+                domain: domainFilter,
+                year: yearFilter,
+                duration: durationFilter
+            });
 
             filteredPublications = allPublications.filter(pub => {
                 if (searchTerm) {
@@ -606,6 +706,22 @@
                 }
                 if (relevanceFilter && pub.relevance !== relevanceFilter) return false;
                 if (systemFilter && !pub.biological_systems.includes(systemFilter)) return false;
+                if (domainFilter && !pub.research_domains.includes(domainFilter)) return false;
+                
+                if (yearFilter && pub.publication_year) {
+                    const currentYear = new Date().getFullYear();
+                    if (yearFilter === 'recent' && pub.publication_year < currentYear - 5) return false;
+                    if (yearFilter === '2015-2020' && (pub.publication_year < 2015 || pub.publication_year > 2020)) return false;
+                    if (yearFilter === '2010-2015' && (pub.publication_year < 2010 || pub.publication_year > 2015)) return false;
+                    if (yearFilter === 'before-2010' && pub.publication_year >= 2010) return false;
+                }
+
+                if (durationFilter && pub.experiment_duration_days) {
+                    if (durationFilter === 'short' && pub.experiment_duration_days > 30) return false;
+                    if (durationFilter === 'medium' && (pub.experiment_duration_days <= 30 || pub.experiment_duration_days > 90)) return false;
+                    if (durationFilter === 'long' && pub.experiment_duration_days <= 90) return false;
+                }
+
                 return true;
             });
 
@@ -616,6 +732,8 @@
                 filteredPublications.sort((a, b) => parseFloat(b.complexity) - parseFloat(a.complexity));
             } else if (sortFilter === 'duration') {
                 filteredPublications.sort((a, b) => (b.experiment_duration_days || 0) - (a.experiment_duration_days || 0));
+            } else if (sortFilter === 'title') {
+                filteredPublications.sort((a, b) => a.title.localeCompare(b.title));
             } else {
                 filteredPublications.sort((a, b) => {
                     const relOrder = { high: 3, medium: 2, low: 1 };
@@ -625,6 +743,7 @@
 
             displayedCount = 10;
             displayPublications();
+            updateResultsCount();
         };
 
         window.debouncedFilter = function() {
@@ -654,8 +773,18 @@
                             <div class="pub-content">
                                 <div class="pub-title">${pub.title}</div>
                                 <div class="pub-description">${excerpt}</div>
+                                ${pub.key_findings.length > 0 ? `
+                                    <details style="margin-top: 12px; cursor: pointer;">
+                                        <summary style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); list-style: none; display: flex; align-items: center; gap: 6px;">
+                                            <span>🔬</span> View ${pub.key_findings.length} Key Finding${pub.key_findings.length > 1 ? 's' : ''}
+                                        </summary>
+                                        <ul style="margin-top: 12px; padding-left: 20px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+                                            ${pub.key_findings.map(f => `<li style="margin-bottom: 6px;">${f}</li>`).join('')}
+                                        </ul>
+                                    </details>
+                                ` : ''}
                                 <div class="pub-meta">
-                                    ${pub.key_findings.length > 0 ? `<div class="meta-item">🔬 Findings: <strong>${pub.key_findings.length}</strong></div>` : ''}
+                                    ${pub.publication_year ? `<div class="meta-item">📅 Year: <strong>${pub.publication_year}</strong></div>` : ''}
                                     ${pub.experiment_duration_days ? `<div class="meta-item">⏱️ Duration: <strong>${pub.experiment_duration_days} days</strong></div>` : ''}
                                     <div class="complexity-badge">Complexity: ${pub.complexity}/10</div>
                                     ${pub.research_domains.slice(0, 2).map(d => 
@@ -665,6 +794,7 @@
                                         `<span class="meta-badge immune">${s.replace(/_/g, ' ')}</span>`
                                     ).join('')}
                                     ${pub.relevance === 'high' ? '<span class="meta-badge high">High Relevance</span>' : ''}
+                                    <a href="${pub.link}" target="_blank" rel="noopener noreferrer" style="margin-left: auto; background: #3b82f6; color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s;">View Publication →</a>
                                 </div>
                             </div>
                         </div>
@@ -679,6 +809,97 @@
         window.loadMore = function() {
             displayedCount += 10;
             displayPublications();
+        };
+
+        function updateResultsCount() {
+            document.getElementById('resultsCount').textContent = Math.min(displayedCount, filteredPublications.length);
+            document.getElementById('totalCount').textContent = filteredPublications.length;
+            
+            const hasFilters = document.getElementById('searchInput').value || 
+                              document.getElementById('relevanceFilter').value ||
+                              document.getElementById('systemFilter').value ||
+                              document.getElementById('domainFilter').value ||
+                              document.getElementById('yearFilter').value ||
+                              document.getElementById('durationFilter').value;
+            
+            document.getElementById('filterInfo').textContent = hasFilters ? '(filtered)' : '';
+        }
+
+        function updateFilterBadges(filters) {
+            const badges = [];
+            const labels = {
+                relevance: 'Relevance',
+                system: 'System',
+                domain: 'Domain',
+                year: 'Year',
+                duration: 'Duration'
+            };
+
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value && key !== 'search') {
+                    const displayValue = value.replace(/_/g, ' ').replace(/-/g, ' ');
+                    badges.push(`<span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">${labels[key]}: ${displayValue}</span>`);
+                }
+            });
+
+            const container = document.getElementById('activeFilters');
+            const badgeContainer = document.getElementById('filterBadges');
+            
+            if (badges.length > 0 || filters.search) {
+                container.style.display = 'block';
+                badgeContainer.innerHTML = badges.join('');
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        window.clearSearch = function() {
+            document.getElementById('searchInput').value = '';
+            filterPublications();
+        };
+
+        window.clearAllFilters = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('relevanceFilter').value = '';
+            document.getElementById('systemFilter').value = '';
+            document.getElementById('domainFilter').value = '';
+            document.getElementById('yearFilter').value = '';
+            document.getElementById('durationFilter').value = '';
+            document.getElementById('sortFilter').value = 'relevance';
+            filterPublications();
+        };
+
+        window.exportData = function() {
+            const csv = [
+                ['ID', 'Title', 'Year', 'Duration (days)', 'Complexity', 'Relevance', 'Systems', 'Domains', 'Abstract'].join(','),
+                ...filteredPublications.map(pub => [
+                    pub.id,
+                    `"${pub.title.replace(/"/g, '""')}"`,
+                    pub.publication_year || '',
+                    pub.experiment_duration_days || '',
+                    pub.complexity,
+                    pub.relevance,
+                    `"${pub.biological_systems.join('; ')}"`,
+                    `"${pub.research_domains.join('; ')}"`,
+                    `"${pub.abstract.substring(0, 200).replace(/"/g, '""')}..."`
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nasa_publications_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        };
+
+        window.showAnalytics = function() {
+            alert('Analytics Dashboard Coming Soon!\n\nFeatures:\n• Publication trends over time\n• Research domain distribution\n• Complexity analysis\n• Citation metrics\n• Collaboration networks');
+        };
+
+        window.toggleDarkMode = function() {
+            alert('Theme switcher coming soon!\n\nPlanned themes:\n• Dark Mode (current)\n• Light Mode\n• High Contrast\n• NASA Blue');
         };
 
         document.addEventListener('DOMContentLoaded', loadPublications);
