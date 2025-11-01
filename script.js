@@ -1,13 +1,29 @@
-import { collection, query, where, getDocs, orderBy, limit, startAfter } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+// ──────────────────────────────────────────────────────────────
+// SAFE JSON PARSER – put this at the very top of the file
+// ──────────────────────────────────────────────────────────────
+function safeJsonParse(str, fallback = []) {
+    if (!str || str === '') return fallback;
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn('Invalid JSON – using fallback:', str);
+        return fallback;
+    }
+}
+
+// ──────────────────────────────────────────────────────────────
 // State management
+// ──────────────────────────────────────────────────────────────
 let allPublications = [];
 let filteredPublications = [];
 let currentPage = 1;
 const itemsPerPage = 10;
-let lastVisible = null;
 
-// Initialize the application
+// ──────────────────────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     await loadPublications();
     setupEventListeners();
@@ -16,19 +32,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     displayPublications();
 });
 
+// ──────────────────────────────────────────────────────────────
 // Load publications from Firestore
+// ──────────────────────────────────────────────────────────────
 async function loadPublications() {
     const loading = document.getElementById('loading');
     const results = document.getElementById('results');
-    
+
     try {
         loading.style.display = 'block';
         results.style.display = 'none';
-        
+
         const publicationsRef = collection(window.db, 'publications');
         const q = query(publicationsRef, orderBy('created_at', 'desc'));
         const querySnapshot = await getDocs(q);
-        
+
         allPublications = [];
         querySnapshot.forEach((doc) => {
             allPublications.push({
@@ -36,238 +54,238 @@ async function loadPublications() {
                 ...doc.data()
             });
         });
-        
+
         filteredPublications = [...allPublications];
-        
+
         loading.style.display = 'none';
         results.style.display = 'grid';
-        
+
     } catch (error) {
         console.error('Error loading publications:', error);
         loading.innerHTML = `<p style="color: red;">Error loading publications. Please check console.</p>`;
     }
 }
 
-// Setup event listeners
+// ──────────────────────────────────────────────────────────────
+// Event listeners
+// ──────────────────────────────────────────────────────────────
 function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('searchInput').addEventListener('keyup', (e) => {
         if (e.key === 'Enter') handleSearch();
     });
-    
+
     document.getElementById('domainFilter').addEventListener('change', applyFilters);
     document.getElementById('systemFilter').addEventListener('change', applyFilters);
     document.getElementById('yearFilter').addEventListener('change', applyFilters);
-    
+
     document.getElementById('resetFilters').addEventListener('click', resetFilters);
-    
+
     document.getElementById('prevBtn').addEventListener('click', () => changePage(-1));
     document.getElementById('nextBtn').addEventListener('click', () => changePage(1));
 }
 
-// Handle search
+// ──────────────────────────────────────────────────────────────
+// Search
+// ──────────────────────────────────────────────────────────────
 function handleSearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    if (!searchTerm) {
+    const term = document.getElementById('searchInput').value.trim().toLowerCase();
+
+    if (!term) {
         filteredPublications = [...allPublications];
     } else {
         filteredPublications = allPublications.filter(pub => {
-            const searchableText = `
-                ${pub.title || ''} 
-                ${pub.abstract || ''} 
-                ${pub.key_findings || ''}
+            const text = `
+                ${pub.title || ''}
+                ${pub.abstract || ''}
+                ${Array.isArray(pub.key_findings) ? pub.key_findings.join(' ') : ''}
             `.toLowerCase();
-            
-            return searchableText.includes(searchTerm);
+            return text.includes(term);
         });
     }
-    
+
     currentPage = 1;
     displayPublications();
 }
 
-// Apply filters
+// ──────────────────────────────────────────────────────────────
+// Filters
+// ──────────────────────────────────────────────────────────────
 function applyFilters() {
-    const domainFilter = document.getElementById('domainFilter').value;
-    const systemFilter = document.getElementById('systemFilter').value;
-    const yearFilter = document.getElementById('yearFilter').value;
-    
+    const domain = document.getElementById('domainFilter').value;
+    const system = document.getElementById('systemFilter').value;
+    const year = document.getElementById('yearFilter').value;
+
     filteredPublications = allPublications.filter(pub => {
-        let matches = true;
-        
-        if (domainFilter && pub.research_domains) {
-            const domains = JSON.parse(pub.research_domains || '[]');
-            matches = matches && domains.includes(domainFilter);
+        let ok = true;
+
+        if (domain) {
+            const domains = safeJsonParse(pub.research_domains);
+            ok = ok && domains.includes(domain);
         }
-        
-        if (systemFilter && pub.biological_systems) {
-            const systems = JSON.parse(pub.biological_systems || '[]');
-            matches = matches && systems.includes(systemFilter);
+
+        if (system) {
+            const systems = safeJsonParse(pub.biological_systems);
+            ok = ok && systems.includes(system);
         }
-        
-        if (yearFilter) {
-            matches = matches && pub.publication_year === parseInt(yearFilter);
+
+        if (year) {
+            ok = ok && pub.publication_year === parseInt(year);
         }
-        
-        return matches;
+
+        return ok;
     });
-    
+
     currentPage = 1;
     displayPublications();
 }
 
+// ──────────────────────────────────────────────────────────────
 // Reset filters
+// ──────────────────────────────────────────────────────────────
 function resetFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('domainFilter').value = '';
     document.getElementById('systemFilter').value = '';
     document.getElementById('yearFilter').value = '';
-    
+
     filteredPublications = [...allPublications];
     currentPage = 1;
     displayPublications();
 }
 
-// Populate filter dropdowns
+// ──────────────────────────────────────────────────────────────
+// Populate dropdowns
+// ──────────────────────────────────────────────────────────────
 function populateFilters() {
     const domains = new Set();
     const systems = new Set();
     const years = new Set();
-    
+
     allPublications.forEach(pub => {
-        if (pub.research_domains) {
-            JSON.parse(pub.research_domains).forEach(d => domains.add(d));
-        }
-        if (pub.biological_systems) {
-            JSON.parse(pub.biological_systems).forEach(s => systems.add(s));
-        }
-        if (pub.publication_year) {
-            years.add(pub.publication_year);
-        }
+        safeJsonParse(pub.research_domains).forEach(d => domains.add(d));
+        safeJsonParse(pub.biological_systems).forEach(s => systems.add(s));
+        if (pub.publication_year) years.add(pub.publication_year);
     });
-    
+
     populateSelect('domainFilter', Array.from(domains).sort());
     populateSelect('systemFilter', Array.from(systems).sort());
     populateSelect('yearFilter', Array.from(years).sort((a, b) => b - a));
 }
 
-// Helper to populate select element
-function populateSelect(elementId, options) {
-    const select = document.getElementById(elementId);
-    const firstOption = select.options[0];
+function populateSelect(id, options) {
+    const select = document.getElementById(id);
+    const placeholder = select.options[0];
     select.innerHTML = '';
-    select.appendChild(firstOption);
-    
-    options.forEach(option => {
-        if (option) {
-            const opt = document.createElement('option');
-            opt.value = option;
-            opt.textContent = option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            select.appendChild(opt);
+    select.appendChild(placeholder);
+
+    options.forEach(opt => {
+        if (opt) {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.textContent = opt.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            select.appendChild(el);
         }
     });
 }
 
-// Update statistics
+// ──────────────────────────────────────────────────────────────
+// Stats
+// ──────────────────────────────────────────────────────────────
 function updateStats() {
     document.getElementById('totalCount').textContent = allPublications.length;
-    
-    const domains = new Set();
+
+    const domainSet = new Set();
     allPublications.forEach(pub => {
-        if (pub.research_domains) {
-            JSON.parse(pub.research_domains).forEach(d => domains.add(d));
-        }
+        safeJsonParse(pub.research_domains).forEach(d => domainSet.add(d));
     });
-    document.getElementById('domainCount').textContent = domains.size;
-    
+    document.getElementById('domainCount').textContent = domainSet.size;
+
     const durations = allPublications
-        .filter(pub => pub.experiment_duration_days)
-        .map(pub => pub.experiment_duration_days);
-    const avgDuration = durations.length > 0 
+        .filter(p => p.experiment_duration_days)
+        .map(p => p.experiment_duration_days);
+    const avg = durations.length
         ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
         : 0;
-    document.getElementById('avgDuration').textContent = avgDuration;
+    document.getElementById('avgDuration').textContent = avg;
 }
 
-// Display publications for current page
+// ──────────────────────────────────────────────────────────────
+// Render page
+// ──────────────────────────────────────────────────────────────
 function displayPublications() {
-    const results = document.getElementById('results');
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pagePublications = filteredPublications.slice(startIndex, endIndex);
-    
-    if (pagePublications.length === 0) {
-        results.innerHTML = '<div class="loading">No publications found matching your criteria.</div>';
+    const container = document.getElementById('results');
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const page = filteredPublications.slice(start, end);
+
+    if (!page.length) {
+        container.innerHTML = '<div class="loading">No publications found matching your criteria.</div>';
         return;
     }
-    
-    results.innerHTML = pagePublications.map(pub => createPublicationCard(pub)).join('');
-    
+
+    container.innerHTML = page.map(createPublicationCard).join('');
     updatePagination();
 }
 
-// Create publication card HTML
+// ──────────────────────────────────────────────────────────────
+// Card HTML
+// ──────────────────────────────────────────────────────────────
 function createPublicationCard(pub) {
-    const domains = JSON.parse(pub.research_domains || '[]');
-    const systems = JSON.parse(pub.biological_systems || '[]');
-    const findings = JSON.parse(pub.key_findings || '[]');
-    
-    const domainBadges = domains.map(d => 
+    const domains = safeJsonParse(pub.research_domains);
+    const systems = safeJsonParse(pub.biological_systems);
+    const findings = safeJsonParse(pub.key_findings);
+
+    const domainBadges = domains.map(d =>
         `<span class="badge badge-domain">${d.replace(/_/g, ' ')}</span>`
     ).join('');
-    
-    const systemBadges = systems.map(s => 
+
+    const systemBadges = systems.map(s =>
         `<span class="badge badge-system">${s.replace(/_/g, ' ')}</span>`
     ).join('');
-    
-    const findingsList = findings.length > 0 
-        ? `<div class="findings">
-            <h4>Key Findings:</h4>
-            <ul>
-                ${findings.map(f => `<li>${f}</li>`).join('')}
-            </ul>
-           </div>`
+
+    const findingsList = findings.length
+        ? `<div class="findings"><h4>Key Findings:</h4><ul>${findings.map(f => `<li>${f}</li>`).join('')}</ul></div>`
         : '';
-    
+
     return `
         <article class="publication-card">
             <div class="publication-header">
                 <h2 class="publication-title">
-                    <a href="${pub.link}" target="_blank" rel="noopener noreferrer">
+                    <a href="${pub.link || '#'}" target="_blank" rel="noopener noreferrer">
                         ${pub.title || 'Untitled Publication'}
                     </a>
                 </h2>
             </div>
-            
+
             <div class="badges">
                 ${domainBadges}
                 ${systemBadges}
                 ${pub.publication_year ? `<span class="badge badge-year">${pub.publication_year}</span>` : ''}
                 ${pub.experiment_duration_days ? `<span class="badge badge-duration">${pub.experiment_duration_days} days</span>` : ''}
             </div>
-            
+
             <p class="publication-abstract">
                 ${pub.abstract ? (pub.abstract.substring(0, 300) + (pub.abstract.length > 300 ? '...' : '')) : 'No abstract available.'}
             </p>
-            
+
             ${findingsList}
         </article>
     `;
 }
 
-// Update pagination controls
+// ──────────────────────────────────────────────────────────────
+// Pagination
+// ──────────────────────────────────────────────────────────────
 function updatePagination() {
     const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
-    
     document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prevBtn').disabled = currentPage === 1;
     document.getElementById('nextBtn').disabled = currentPage === totalPages;
 }
 
-// Change page
-function changePage(direction) {
-    currentPage += direction;
+function changePage(dir) {
+    currentPage += dir;
     displayPublications();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
