@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary upload tool (don't deploy this)
+upload.html
+
+# CSV data (already in Firebase)
+*.csv
+data/
