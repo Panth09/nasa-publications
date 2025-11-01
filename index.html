@@ -777,7 +777,18 @@
                             <option value="low">Low Relevance</option>
                         </select>
                     </div>
-                   
+                    <div class="filter-group">
+                        <label>Biological System</label>
+                        <select class="filter-select" id="systemFilter" onchange="filterPublications()">
+                            <option value="">All Systems</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Research Domain</label>
+                        <select class="filter-select" id="domainFilter" onchange="filterPublications()">
+                            <option value="">All Domains</option>
+                        </select>
+                    </div>
                     <div class="filter-group">
                         <label>Year Range</label>
                         <select class="filter-select" id="yearFilter" onchange="filterPublications()">
