@@ -728,6 +728,7 @@
                 <div class="search-wrapper">
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-box" id="searchInput" placeholder="Search publications..." oninput="debouncedFilter()">
+                    <button id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: none; align-items: center; justify-content: center; transition: all 0.2s;" onclick="clearSearch()">✕</button>
                 </div>
 
                 <div class="filters-grid">
@@ -770,6 +771,9 @@
                 <div class="filters-footer">
                     <div class="results-count">
                         Showing <strong id="resultsCount">0</strong> of <strong id="totalCount">0</strong> publications
+                        <button onclick="clearAllFilters()" class="btn btn-secondary" style="margin-left: 12px; padding: 4px 12px; font-size: 12px; display: none;" id="clearFiltersBtn">
+                            Clear All Filters
+                        </button>
                     </div>
                     <div class="view-toggle">
                         <button class="view-btn active" onclick="setViewMode('cards')">Cards</button>
@@ -1139,7 +1143,7 @@
                         <button onclick="loadDemoData()" class="btn btn-primary" style="margin-top: 20px; border: none;">
                             📚 Continue with Demo Data
                         </button>
-                        <button onclick="USE_DEMO_MODE = false; loadPublications();" class="btn btn-secondary" style="margin-top: 20px; margin-left: 12px; border: none;">
+                        <button onclick="window.USE_DEMO_MODE = false; loadPublications();" class="btn btn-secondary" style="margin-top: 20px; margin-left: 12px; border: none;">
                             🔄 Retry Supabase Connection
                         </button>
                     </div>
@@ -1212,7 +1216,23 @@
 
         window.debouncedFilter = function() {
             clearTimeout(debounceTimer);
+            
+            // Show/hide clear button
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (searchInput.value.trim()) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
             debounceTimer = setTimeout(filterPublications, 300);
+        };
+
+        window.clearSearch = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').style.display = 'none';
+            filterPublications();
         };
 
         window.filterPublications = function() {
@@ -1223,6 +1243,16 @@
             const year = document.getElementById('yearFilter').value;
             const duration = document.getElementById('durationFilter').value;
             const sort = document.getElementById('sortFilter').value;
+
+            // Check if any filters are active
+            const hasActiveFilters = searchTerm || relevance !== 'all' || system !== 'all' || 
+                                    domain !== 'all' || year !== 'all' || duration !== 'all';
+            
+            // Show/hide clear filters button
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.style.display = hasActiveFilters ? 'inline-block' : 'none';
+            }
 
             filteredPublications = allPublications.filter(pub => {
                 const matchesSearch = !searchTerm || 
@@ -1260,6 +1290,21 @@
             }
 
             displayPublications();
+        };
+
+        window.clearAllFilters = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('relevanceFilter').value = 'all';
+            document.getElementById('systemFilter').value = 'all';
+            document.getElementById('domainFilter').value = 'all';
+            document.getElementById('yearFilter').value = 'all';
+            document.getElementById('durationFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'relevance';
+            document.getElementById('clearSearchBtn').style.display = 'none';
+            
+            filterPublications();
+            
+            showNotification('🔄 All filters cleared', 'rgba(59, 130, 246, 0.95)');
         };
 
         function displayPublications() {
@@ -1396,13 +1441,16 @@
         window.toggleAdvancedFilters = function() {
             const advanced = document.getElementById('advancedFilters');
             const toggleText = document.getElementById('advancedToggleText');
+            const btn = event.target.closest('button');
             
             if (advanced.classList.contains('active')) {
                 advanced.classList.remove('active');
                 toggleText.textContent = 'Show Advanced';
+                btn.style.background = 'rgba(255, 255, 255, 0.1)';
             } else {
                 advanced.classList.add('active');
                 toggleText.textContent = 'Hide Advanced';
+                btn.style.background = 'rgba(59, 130, 246, 0.3)';
             }
         };
 
@@ -1414,34 +1462,83 @@
                 body.classList.remove('light-mode');
                 icon.textContent = '🌙';
                 localStorage.setItem('theme', 'dark');
+                
+                // Show notification
+                showNotification('🌙 Dark mode activated', 'rgba(59, 130, 246, 0.95)');
             } else {
                 body.classList.add('light-mode');
                 icon.textContent = '☀️';
                 localStorage.setItem('theme', 'light');
+                
+                // Show notification
+                showNotification('☀️ Light mode activated', 'rgba(251, 146, 60, 0.95)');
             }
         };
 
+        function showNotification(message, color) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `position: fixed; top: 80px; right: 20px; background: ${color}; color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 1000; border: 1px solid rgba(255,255,255,0.2); animation: slideIn 0.3s ease-out;`;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
+        }
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
         window.exportData = function() {
-            const csv = [
-                ['Title', 'PMCID', 'Relevance', 'Complexity', 'Year', 'Duration', 'Findings'],
-                ...filteredPublications.map(pub => [
+            const headers = ['Title', 'PMCID', 'Relevance', 'Complexity', 'Year', 'Duration (days)', 'Findings', 'Citations', 'Systems', 'Domains'];
+            const rows = filteredPublications.map(pub => {
+                const systems = parseArray(pub.biological_systems).join('; ');
+                const domains = parseArray(pub.research_domains).join('; ');
+                
+                return [
                     `"${(pub.title || '').replace(/"/g, '""')}"`,
                     pub.pmcid || '',
                     pub.mission_relevance || '',
                     pub.space_complexity || '',
                     pub.publication_year || '',
                     pub.experiment_duration_days || '',
-                    pub.findings_count || ''
-                ])
-            ].map(row => row.join(',')).join('\n');
+                    pub.findings_count || '',
+                    pub.citations_count || '',
+                    `"${systems}"`,
+                    `"${domains}"`
+                ];
+            });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'nasa_publications.csv';
-            a.click();
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `nasa_publications_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 80px; right: 20px; background: rgba(147, 51, 234, 0.95); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 1000; max-width: 400px; border: 1px solid rgba(255,255,255,0.2);';
+            notification.innerHTML = `📥 Exported ${filteredPublications.length} publications <br><small style="opacity: 0.9;">CSV file downloaded successfully</small>`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
         };
 
         window.triggerProcessing = async function() {
@@ -1449,34 +1546,127 @@
             
             processing = true;
             const btn = document.getElementById('processBtn');
-            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></span> Processing...';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<div style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;"></div> Processing...';
             btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
 
             try {
-                await fetch(N8N_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                if (USE_DEMO_MODE) {
+                    // Simulate processing for demo
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position: fixed; top: 80px; right: 20px; background: rgba(34, 197, 94, 0.95); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 1000; max-width: 400px; border: 1px solid rgba(255,255,255,0.2);';
+                    notification.innerHTML = '✅ Processing complete! <br><small style="opacity: 0.9;">Demo mode - no actual processing performed</small>';
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 4000);
+                } else {
+                    await fetch(N8N_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ trigger: 'process_publications', timestamp: new Date().toISOString() })
+                    });
+                    
+                    setTimeout(() => {
+                        loadPublications();
+                    }, 5000);
+                }
                 
-                setTimeout(() => {
-                    loadPublications();
-                    processing = false;
-                    btn.innerHTML = '<span>🔄</span> Process New Data';
-                    btn.disabled = false;
-                }, 5000);
+                processing = false;
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
             } catch (error) {
                 console.error('Error triggering processing:', error);
                 processing = false;
-                btn.innerHTML = '<span>🔄</span> Process New Data';
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                
+                // Show error notification
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position: fixed; top: 80px; right: 20px; background: rgba(239, 68, 68, 0.95); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 1000; max-width: 400px; border: 1px solid rgba(255,255,255,0.2);';
+                notification.innerHTML = '❌ Processing failed <br><small style="opacity: 0.9;">Could not connect to processing webhook</small>';
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 4000);
             }
         };
 
         window.setViewMode = function(mode) {
             const btns = document.querySelectorAll('.view-btn');
             btns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // Find and activate the clicked button
+            const clickedBtn = Array.from(btns).find(btn => 
+                btn.textContent.toLowerCase().includes(mode)
+            );
+            if (clickedBtn) clickedBtn.classList.add('active');
+            
+            if (mode === 'table') {
+                displayTableView();
+            } else {
+                displayPublications();
+            }
         };
+
+        function displayTableView() {
+            const container = document.getElementById('publicationsList');
+            document.getElementById('resultsCount').textContent = filteredPublications.length;
+            document.getElementById('totalCount').textContent = allPublications.length;
+
+            if (filteredPublications.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">📚</div>
+                        <p style="font-size: 18px;">No publications found matching your filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; overflow: hidden;">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: rgba(255, 255, 255, 0.05);">
+                                <tr>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Title</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">PMCID</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Relevance</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Complexity</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Year</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Duration</th>
+                                    <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Findings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filteredPublications.map((pub, idx) => {
+                                    const relevanceClass = getRelevanceColor(pub.mission_relevance);
+                                    return `
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); ${idx % 2 === 0 ? 'background: rgba(255, 255, 255, 0.03);' : ''} transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.08)'" onmouseout="this.style.background='${idx % 2 === 0 ? 'rgba(255, 255, 255, 0.03)' : 'transparent'}'">
+                                            <td style="padding: 12px 16px; font-size: 13px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${pub.title}">${pub.title || 'Untitled'}</td>
+                                            <td style="padding: 12px 16px; font-size: 13px; font-family: monospace;">${pub.pmcid || 'N/A'}</td>
+                                            <td style="padding: 12px 16px;">
+                                                <span class="badge ${relevanceClass}" style="display: inline-block;">${(pub.mission_relevance || 'unknown').toUpperCase()}</span>
+                                            </td>
+                                            <td style="padding: 12px 16px; font-size: 13px; font-weight: 600;">${pub.space_complexity || 0}/10</td>
+                                            <td style="padding: 12px 16px; font-size: 13px;">${pub.publication_year || 'N/A'}</td>
+                                            <td style="padding: 12px 16px; font-size: 13px;">${pub.experiment_duration_days || 'N/A'}${pub.experiment_duration_days ? 'd' : ''}</td>
+                                            <td style="padding: 12px 16px; font-size: 13px; font-weight: 600;">${pub.findings_count || 0}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
 
         function add3DCardEffect() {
             const cards = document.querySelectorAll('.developer-card');
